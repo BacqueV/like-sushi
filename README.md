@@ -1,2 +1,2 @@
 # Aiogram-Template
-Telegram bot on PostgreSQL
+Telegram bot for LikeSushi
