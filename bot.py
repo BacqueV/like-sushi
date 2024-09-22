@@ -1,6 +1,8 @@
 from aiogram import executor
 
 from loader import dp, db
+import asyncpg
+from data import config
 from utils.notify_admins import on_startup_notify
 from utils.set_bot_commands import set_default_commands
 
@@ -9,7 +11,13 @@ import middlewares, filters, handlers
 
 
 async def start(dispatcher):
-    await db.create()
+    pool = await asyncpg.create_pool(
+            user=config.DB_USER,
+            password=config.DB_PASS,
+            host=config.DB_HOST,
+            database=config.DB_NAME,
+        )
+    await db.connect()
     await db.create_table_users()
     await set_default_commands(dispatcher)
     await on_startup_notify(dispatcher)

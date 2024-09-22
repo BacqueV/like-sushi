@@ -102,7 +102,8 @@ class Database:
         return await self.execute(sql, fetchval=True)
     
     async def create_table_ad_company(self, table_name):
-        sql = f"CREATE TABLE IF NOT EXISTS {table_name} (telegram_id bigint NOT NULL, status text, description text, PRIMARY KEY (telegram_id));"
+        sql = f"CREATE TABLE {table_name} (telegram_id bigint NOT NULL, status text, description text, PRIMARY KEY (telegram_id));"
+        print("\n\n\n\n\nFUUUUUUUUUUUUUUUUUCK\n\n\n\n\n\n")
         await self.execute(sql)
         
         sql = f"INSERT INTO {table_name} (telegram_id, status, description) SELECT telegram_id, 'waiting', null FROM Users;"
@@ -111,15 +112,3 @@ class Database:
     async def delete_ad_copmany(self, table_name):
         sql = f"DROP TABLE {table_name};"
         await self.execute(sql)
-
-    """
-    Broadcasting
-    """
-
-    async def list_broadcasting_users(self, ad_name):
-        sql = f"SELECT telegram_id FROM {ad_name} WHERE status = 'waiting'"
-        self.execute(sql, fetch=True)
-
-    async def update_status(self, ad_name, telegram_id, status, description):
-        sql = f"UPDATE {ad_name}, SET status='status', description='{description}' WHERE telegram_id={telegram_id}"
-        

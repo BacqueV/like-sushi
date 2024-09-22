@@ -2,6 +2,7 @@ from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
 from loader import dp, db, bot
 from data.config import ADMINS
+from aiogram.utils.exceptions import BotBlocked
 
 
 @dp.message_handler(CommandStart())
@@ -22,4 +23,7 @@ async def bot_start(message: types.Message):
         msg = f"У нас новый пользователей! @{user[2]}\n" + f"Общее количество пользователей - {count}"
         await bot.send_message(chat_id=ADMINS[0], text=msg)
 
-    await message.answer(f"Добро пожаловать! @{username}")
+    try:
+        await message.answer(f"Добро пожаловать! @{username}")
+    except BotBlocked:
+        return

@@ -6,7 +6,7 @@ from states.admin import AdminState
 from aiogram.dispatcher import FSMContext
 from keyboards.inline.advert import keyboard_builder
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
+from utils.broadcast import broadcaster
 
 @dp.message_handler(commands=["advert"], user_id=ADMINS)
 async def wait_msg(message: types.Message, state: FSMContext):
@@ -116,7 +116,8 @@ async def decide_confirmation(call: types.CallbackQuery, state: FSMContext):
         if not await db.check_table(ad_name):
             await db.create_table_ad_company(ad_name)
 
-        await call.message.answer(f"Успешно разослали рекламное сообщение!")
+        count = await broadcaster(bot,ad_name, chat_id, message_id, btn_txt, btn_url)
+        await call.message.answer(f"Успешно разослали рекламное сообщение {count} пользователям!")
         await db.delete_ad_copmany(ad_name)
 
     elif call.data == 'deny':
