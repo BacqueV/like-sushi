@@ -11,7 +11,7 @@ class Database:
     def __init__(self):
         self.pool: Union[Pool, None] = None
 
-    async def create(self):
+    async def connect(self):
         self.pool = await asyncpg.create_pool(
             user=config.DB_USER,
             password=config.DB_PASS,
@@ -29,7 +29,9 @@ class Database:
         execute: bool = False,
     ):
         async with self.pool.acquire() as connection:
-            result = 41  # just. don't. fucking delete that!!
+
+            result = None
+
             connection: Connection
             async with connection.transaction():
                 if fetch:
@@ -60,6 +62,10 @@ class Database:
         )
         return sql, tuple(parameters.values())
 
+    """
+    Base
+    """
+
     async def add_user(self, full_name, username, telegram_id):
         sql = "INSERT INTO Users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
         return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
@@ -87,17 +93,33 @@ class Database:
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)
 
+    """
+    Advert
+    """
+
     async def check_table(self, table_name):
         sql = f"SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '{table_name}');"
         return await self.execute(sql, fetchval=True)
     
     async def create_table_ad_company(self, table_name):
-        sql = f"CREATE TABLE IF NOT EXISTS {table_name} (user_id bigint NOT NULL, status text, description text, PRIMARY KEY (user_id));"
+        sql = f"CREATE TABLE IF NOT EXISTS {table_name} (telegram_id bigint NOT NULL, status text, description text, PRIMARY KEY (telegram_id));"
         await self.execute(sql)
         
-        sql = f"INSERT INTO {table_name} (user_id, status, description) SELECT user_id, 'waiting', null FROM Users;"
+        sql = f"INSERT INTO {table_name} (telegram_id, status, description) SELECT telegram_id, 'waiting', null FROM Users;"
         await self.execute(sql)
 
     async def delete_ad_copmany(self, table_name):
         sql = f"DROP TABLE {table_name};"
         await self.execute(sql)
+
+    """
+    Broadcasting
+    """
+
+    async def list_broadcasting_users(self, ad_name):
+        sql = f"SELECT telegram_id FROM {ad_name} WHERE status = 'waiting'"
+        self.execute(sql, fetch=True)
+
+    async def update_status(self, ad_name, telegram_id, status, description):
+        sql = f"UPDATE {ad_name}, SET status='status', description='{description}' WHERE telegram_id={telegram_id}"
+        

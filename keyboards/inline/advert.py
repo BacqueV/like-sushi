@@ -4,19 +4,3 @@ add_btn = InlineKeyboardButton(text='Добавить кнопку', callback_da
 no_btn = InlineKeyboardButton(text='Продолжить без кнопки', callback_data='no_btn')
 
 keyboard_builder = InlineKeyboardMarkup().insert(add_btn).insert(no_btn)
-kb_confirmation = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(
-                        text='Подтвердить',
-                        callback_data='confirm'
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text='Отменить',
-                        callback_data='deny'
-                    )
-                ]
-            ]
-        )
