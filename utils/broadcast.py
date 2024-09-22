@@ -21,7 +21,7 @@ async def create_keyboard(btn_txt, btn_url):
     return advertising_kb
 
 
-async def get_userlist(ad_name):
+async def get_userlist():
     connection = await asyncpg.create_pool(
         user=config.DB_USER,
         password=config.DB_PASS,
@@ -29,12 +29,12 @@ async def get_userlist(ad_name):
         database=config.DB_NAME,
     )
 
-    sql = f"SELECT telegram_id FROM {ad_name} WHERE status = 'waiting'"
-    results_query = List[Record] = await connection.fetch(sql)
+    sql = f"SELECT telegram_id FROM broadcasting WHERE status = 'waiting';"
+    results_query: List[Record] = await connection.fetch(sql)
     return [result.get('telegram_id') for result in results_query]
 
 
-async def update_status(ad_name, telegram_id, status, description):
+async def update_status(telegram_id, status, description):
     connection = await asyncpg.create_pool(
         user=config.DB_USER,
         password=config.DB_PASS,
@@ -42,26 +42,26 @@ async def update_status(ad_name, telegram_id, status, description):
         database=config.DB_NAME,
     )
 
-    sql = f"UPDATE {ad_name}, SET status='{status}', description='{description}' WHERE telegram_id={telegram_id}"
+    sql = f"UPDATE broadcasting SET status='{status}', description='{description}' WHERE telegram_id={telegram_id};"
     await connection.execute(sql)
 
 
 async def send_message(
         bot,
         telegram_id: int, from_chat_id: int, message_id: int,
-        ad_name: str, keyboard: InlineKeyboardMarkup = None
+        keyboard: InlineKeyboardMarkup = None
     ):
     try:
         await bot.copy_message(telegram_id, from_chat_id, message_id, reply_markup=keyboard)
     except RetryAfter as e:
         await asyncio.sleep(e.timeout)
         return await send_message(
-            telegram_id, from_chat_id, message_id, ad_name, keyboard
+            telegram_id, from_chat_id, message_id, keyboard
         )
     except Exception as e:
-        await update_status(ad_name, telegram_id, 'unsuccessful', f'{e}')
+        await update_status(telegram_id, 'unsuccessful', f'{e}')
     else:
-        await update_status(ad_name, telegram_id, 'successful', "No errors")
+        await update_status(telegram_id, 'successful', "No errors")
         return True
     
     return False
@@ -69,7 +69,7 @@ async def send_message(
 
 async def broadcaster(
     bot,
-    ad_name, from_chat_id: int, message_id: int,
+    from_chat_id: int, message_id: int,
     btn_txt: str = None, btn_url: str = None
 ):
     keyboard = None
@@ -77,14 +77,14 @@ async def broadcaster(
     if btn_txt and btn_url:
         keyboard = await create_keyboard(btn_txt, btn_url)
 
-    userlist = await get_userlist(ad_name)
+    userlist = await get_userlist()
     count = 0
     try:
         for telegram_id in userlist:
-            if await send_message(bot, int(telegram_id), from_chat_id, message_id, ad_name, keyboard):
+            if await send_message(bot, int(telegram_id), from_chat_id, message_id, keyboard):
                 count += 1
             await asyncio.sleep(.05)
     finally:
-        print(f"Разослали сообщение {count} пользователям")
+        print(f"\nРазослали сообщение [{count}] пользователям\n")
 
     return count

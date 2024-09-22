@@ -11,14 +11,9 @@ import middlewares, filters, handlers
 
 
 async def start(dispatcher):
-    pool = await asyncpg.create_pool(
-            user=config.DB_USER,
-            password=config.DB_PASS,
-            host=config.DB_HOST,
-            database=config.DB_NAME,
-        )
     await db.connect()
     await db.create_table_users()
+    await db.create_table_broadcasting()
     await set_default_commands(dispatcher)
     await on_startup_notify(dispatcher)
 

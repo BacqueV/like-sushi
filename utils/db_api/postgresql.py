@@ -46,7 +46,7 @@ class Database:
 
     async def create_table_users(self):
         sql = """
-        CREATE TABLE IF NOT EXISTS Users (
+        CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         username varchar(255) NULL,
@@ -67,48 +67,43 @@ class Database:
     """
 
     async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO Users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
+        sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
         return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
 
     async def select_all_users(self):
-        sql = "SELECT * FROM Users"
+        sql = "SELECT * FROM users"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, **kwargs):
-        sql = "SELECT * FROM Users WHERE "
+        sql = "SELECT * FROM users WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
 
     async def count_users(self):
-        sql = "SELECT COUNT(*) FROM Users"
+        sql = "SELECT COUNT(*) FROM users"
         return await self.execute(sql, fetchval=True)
 
     async def update_user_username(self, username, telegram_id):
-        sql = "UPDATE Users SET username=$1 WHERE telegram_id=$2"
+        sql = "UPDATE users SET username=$1 WHERE telegram_id=$2"
         return await self.execute(sql, username, telegram_id, execute=True)
 
     async def delete_users(self):
-        await self.execute("DELETE FROM Users WHERE TRUE", execute=True)
+        await self.execute("DELETE FROM users WHERE TRUE", execute=True)
 
     async def drop_users(self):
-        await self.execute("DROP TABLE Users", execute=True)
+        await self.execute("DROP TABLE users", execute=True)
 
     """
-    Advert
+    Broadcasting
     """
 
-    async def check_table(self, table_name):
-        sql = f"SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '{table_name}');"
-        return await self.execute(sql, fetchval=True)
-    
-    async def create_table_ad_company(self, table_name):
-        sql = f"CREATE TABLE {table_name} (telegram_id bigint NOT NULL, status text, description text, PRIMARY KEY (telegram_id));"
-        print("\n\n\n\n\nFUUUUUUUUUUUUUUUUUCK\n\n\n\n\n\n")
+    async def create_table_broadcasting(self):
+        sql = "CREATE TABLE IF NOT EXISTS broadcasting (telegram_id bigint NOT NULL, status text, description text, PRIMARY KEY (telegram_id));"
         await self.execute(sql)
         
-        sql = f"INSERT INTO {table_name} (telegram_id, status, description) SELECT telegram_id, 'waiting', null FROM Users;"
-        await self.execute(sql)
+    async def fill_broadcasting_table(self):
+        sql = "INSERT INTO broadcasting (telegram_id, status, description) SELECT telegram_id, 'waiting', null FROM users;"
+        await self.execute(sql, execute=True)
 
-    async def delete_ad_copmany(self, table_name):
-        sql = f"DROP TABLE {table_name};"
-        await self.execute(sql)
+    async def clean_broadcasting_table(self):
+        await self.execute("DELETE FROM broadcasting WHERE TRUE;", execute=True)
