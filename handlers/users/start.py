@@ -6,7 +6,7 @@ from data.config import ADMINS
 
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message):
-    await db.create_table_users()  # just in case if somebody droped the table of users
+    await db.create_table_users()  # just in case if someone has droped the table of users
     
     username = message.from_user.username
     user = await db.select_user(telegram_id=message.from_user.id)

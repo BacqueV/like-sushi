@@ -29,6 +29,7 @@ class Database:
         execute: bool = False,
     ):
         async with self.pool.acquire() as connection:
+            result = 41  # just. don't. fucking delete that!!
             connection: Connection
             async with connection.transaction():
                 if fetch:
@@ -85,3 +86,18 @@ class Database:
 
     async def drop_users(self):
         await self.execute("DROP TABLE Users", execute=True)
+
+    async def check_table(self, table_name):
+        sql = f"SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = '{table_name}');"
+        return await self.execute(sql, fetchval=True)
+    
+    async def create_table_ad_company(self, table_name):
+        sql = f"CREATE TABLE IF NOT EXISTS {table_name} (user_id bigint NOT NULL, status text, description text, PRIMARY KEY (user_id));"
+        await self.execute(sql)
+        
+        sql = f"INSERT INTO {table_name} (user_id, status, description) SELECT user_id, 'waiting', null FROM Users;"
+        await self.execute(sql)
+
+    async def delete_ad_copmany(self, table_name):
+        sql = f"DROP TABLE {table_name};"
+        await self.execute(sql)
