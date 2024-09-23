@@ -1,4 +1,3 @@
-import asyncio
 from aiogram import types
 from data.config import ADMINS
 from loader import dp, db, bot
@@ -15,14 +14,14 @@ async def wait_msg(message: types.Message):
     await AdminState.wait_msg.set()
 
 
-@dp.message_handler(state=AdminState.wait_msg)
+@dp.message_handler(state=AdminState.wait_msg, content_types=types.ContentType.ANY)
 async def get_message(message: types.Message, state: FSMContext):
-    await state.update_data(message_id=message.message_id, chat_id=message.from_user.id)
     await message.answer(
         'Хорошо, я запомнил сообщение, которое ты хочешь разослать\n' + 
         'Хочешь добавить кнопку со ссылкой на рекламируемый ресурс?',
         reply_markup=keyboard_builder
     )
+    await state.update_data(message_id=message.message_id, chat_id=message.from_user.id)
     await AdminState.build_kb.set()
 
 

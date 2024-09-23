@@ -85,6 +85,6 @@ async def broadcaster(
                 count += 1
             await asyncio.sleep(.05)
     finally:
-        print(f"\nРазослали сообщение [{count}] пользователям\n")
+        pass
 
     return count
