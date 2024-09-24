@@ -28,9 +28,6 @@ async def get_adminlist():
     results_query: List[Record] = await connection.fetch(sql)
     await connection.close()
 
-    global admins
-    admins = [result.get('telegram_id') for result in results_query]
-    
     return [result.get('telegram_id') for result in results_query]
 
 
