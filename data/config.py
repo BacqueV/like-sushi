@@ -7,7 +7,7 @@ import asyncio
 env = Env()
 env.read_env()
 
-ADMINS = []
+admins = []
 BOT_TOKEN = env.str("BOT_TOKEN")
 
 DB_USER = env.str("DB_USER")
@@ -28,20 +28,13 @@ async def get_adminlist():
     results_query: List[Record] = await connection.fetch(sql)
     await connection.close()
 
-    global ADMINS
-    ADMINS = [result.get('telegram_id') for result in results_query]
+    global admins
+    admins = [result.get('telegram_id') for result in results_query]
     
     return [result.get('telegram_id') for result in results_query]
 
 
-ADMINS = asyncio.run(get_adminlist())
+admins = asyncio.run(get_adminlist())
 
-
-async def refresh_adminlist(interval):
-    while True:
-        await get_adminlist()
-        await asyncio.sleep(interval)
-
-
-loop = asyncio.get_event_loop()
-loop.create_task(refresh_adminlist(60))
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)

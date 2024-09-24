@@ -1,10 +1,10 @@
 from aiogram import types
-from data.config import ADMINS
+from data import config
 from loader import dp, db, bot
 import pandas as pd
 
 
-@dp.message_handler(text="/userlist", user_id=ADMINS)
+@dp.message_handler(text="/userlist", user_id=config.admins)
 async def get_all_users(message: types.Message):
     users = await db.select_all_users()
     telegram_id = []
@@ -26,15 +26,16 @@ async def get_all_users(message: types.Message):
             await bot.send_message(message.chat.id, df[x:x + 50])
     else:
         await bot.send_message(message.chat.id, df)
+    print(config.admins)
 
 
-@dp.message_handler(text="/cleandb", user_id=ADMINS)
+@dp.message_handler(text="/cleandb", user_id=config.admins)
 async def get_all_users(message: types.Message):
     await db.delete_users()
     await message.answer("База данных пользователей очищена!")
 
 
-@dp.message_handler(text="/dropusers", user_id=ADMINS)
+@dp.message_handler(text="/dropusers", user_id=config.admins)
 async def get_all_users(message: types.Message):
     await db.drop_users()
     await message.answer("База данных пользователей удалена!")

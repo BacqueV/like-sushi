@@ -1,5 +1,5 @@
 from aiogram import types
-from data.config import ADMINS
+from data.config import admins
 from loader import dp, db, bot
 from states.admin import BroadcastingState
 from aiogram.dispatcher import FSMContext
@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from utils.broadcast import broadcaster
 
 
-@dp.message_handler(text='/advert', user_id=ADMINS)
+@dp.message_handler(text='/advert', user_id=admins)
 async def wait_msg(message: types.Message):
     await message.answer("Приступаем к созданию рассылки!\n" + "<b>Отправь сообщение для рассылки</b>")
     await BroadcastingState.wait_msg.set()

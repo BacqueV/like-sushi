@@ -1,7 +1,7 @@
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
 from loader import dp, db, bot
-from data.config import ADMINS
+from data.config import admins
 from aiogram.utils.exceptions import BotBlocked
 
 
@@ -21,7 +21,7 @@ async def bot_start(message: types.Message):
         # informing admins
         count = await db.count_users()
         msg = f"У нас новый пользователей! @{user[2]}\n" + f"Общее количество пользователей - {count}"
-        await bot.send_message(chat_id=ADMINS[0], text=msg)
+        await bot.send_message(chat_id=admins[0], text=msg)
 
     try:
         await message.answer(f"Добро пожаловать! @{username}")

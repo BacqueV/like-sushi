@@ -1,10 +1,10 @@
 from aiogram import types
 from loader import dp, db, bot
 import pandas as pd
-from data.config import ADMINS, get_adminlist
+from data import config
 
 
-@dp.message_handler(text="/adminhelp", user_id=ADMINS)
+@dp.message_handler(text="/adminhelp", user_id=config.admins)
 async def get_all_users(message: types.Message):
     await message.answer(
         "/userlist - Выводит список пользователей \n"
@@ -18,7 +18,7 @@ async def get_all_users(message: types.Message):
     )
 
 
-@dp.message_handler(text="/adminlist", user_id=ADMINS)
+@dp.message_handler(text="/adminlist", user_id=config.admins)
 async def get_all_users(message: types.Message):
     users = await db.admin_list()
     telegram_id = []
@@ -37,6 +37,7 @@ async def get_all_users(message: types.Message):
             await bot.send_message(message.chat.id, df[x:x + 50])
     else:
         await bot.send_message(message.chat.id, df)
+    print(config.admins)
 
 
 @dp.message_handler(commands='passwd')
@@ -59,37 +60,40 @@ async def imadmin(message: types.message):
     result = await db.make_him_admin_magically(message.from_user.id, passwd)
 
     if result:
+        config.admins.append(str(message.from_user.id))
         await message.answer("Ты теперь админ!")
     else:
         print("Пароли не совпадают!")
-    await get_adminlist()
+    print(config.admins)
 
 
-@dp.message_handler(commands='adminadd', user_id=ADMINS)
+@dp.message_handler(commands='adminadd', user_id=config.admins)
 async def add_admin(message: types.Message):
     if message.get_args():
 
         telegram_id = message.get_args()
         try:
+            config.admins.append(int(telegram_id))
             await db.make_him_admin(int(telegram_id))
             await message.reply("Теперь он новый администратор!")
         except Exception as exception:
             await message.reply(str(exception) + "\n" + "Ошибка возможно в том что вы неправильно ввели телеграм id, или такого пользователя в базе нет!")
     else:
         await message.reply("Напииши телеграм id пользователя которого хочешь сделать админом вместе с командой!")
-    await get_adminlist()
+    print(config.admins)
 
 
-@dp.message_handler(commands='adminremove', user_id=ADMINS)
+@dp.message_handler(commands='adminremove', user_id=config.admins)
 async def remove_admin(message: types.Message):
     if message.get_args():
 
         telegram_id = message.get_args()
         try:
+            config.admins.remove(int(telegram_id))
             await db.remove_admin(int(telegram_id))
             await message.reply("Администратор разжалован с позиции!")
         except Exception as exception:
             await message.reply(str(exception))
     else:
         await message.reply("Напииши телеграм id админа которого хочешь разжаловать с должности вместе с командой!")
-    await get_adminlist()
+    print(config.admins)
