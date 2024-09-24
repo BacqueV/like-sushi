@@ -1,4 +1,3 @@
-import asyncio
 from aiogram import types
 from data.config import ADMINS
 from loader import dp, db, bot
@@ -10,12 +9,15 @@ async def get_all_users(message: types.Message):
     users = await db.select_all_users()
     telegram_id = []
     name = []
+    is_admin = []
     for user in users:
-        telegram_id.append(user[-1])
+        telegram_id.append(user[-2])
         name.append(user[1])
+        is_admin.append(user[-1])
     data = {
         "Telegram ID": telegram_id,
-        "Name": name
+        "Name": name,
+        "Is admin": is_admin
     }
     pd.options.display.max_rows = 10000
     df = pd.DataFrame(data)
@@ -32,7 +34,7 @@ async def get_all_users(message: types.Message):
     await message.answer("База данных пользователей очищена!")
 
 
-@dp.message_handler(text="/dropdb", user_id=ADMINS)
+@dp.message_handler(text="/dropusers", user_id=ADMINS)
 async def get_all_users(message: types.Message):
     await db.drop_users()
     await message.answer("База данных пользователей удалена!")

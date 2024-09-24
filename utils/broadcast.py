@@ -31,6 +31,8 @@ async def get_userlist():
 
     sql = f"SELECT telegram_id FROM broadcasting WHERE status = 'waiting';"
     results_query: List[Record] = await connection.fetch(sql)
+    
+    await connection.close()
     return [result.get('telegram_id') for result in results_query]
 
 
@@ -44,6 +46,7 @@ async def update_status(telegram_id, status, description):
 
     sql = f"UPDATE broadcasting SET status='{status}', description='{description}' WHERE telegram_id={telegram_id};"
     await connection.execute(sql)
+    await connection.close()
 
 
 async def send_message(

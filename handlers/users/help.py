@@ -8,6 +8,7 @@ from loader import dp
 async def bot_help(message: types.Message):
     text = ("Команды: ",
             "/start - Запуск бота",
-            "/help - Помощь в работе бота")
+            "/help - Помощь в работе бота",
+            "/adminhelp - Админские команды, работает только если ты админ :D")
     
     await message.answer("\n".join(text))

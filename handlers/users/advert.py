@@ -1,7 +1,7 @@
 from aiogram import types
 from data.config import ADMINS
 from loader import dp, db, bot
-from states.admin import AdminState
+from states.admin import BroadcastingState
 from aiogram.dispatcher import FSMContext
 from keyboards.inline.advert import keyboard_builder
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
@@ -11,10 +11,10 @@ from utils.broadcast import broadcaster
 @dp.message_handler(text='/advert', user_id=ADMINS)
 async def wait_msg(message: types.Message):
     await message.answer("Приступаем к созданию рассылки!\n" + "<b>Отправь сообщение для рассылки</b>")
-    await AdminState.wait_msg.set()
+    await BroadcastingState.wait_msg.set()
 
 
-@dp.message_handler(state=AdminState.wait_msg, content_types=types.ContentType.ANY)
+@dp.message_handler(state=BroadcastingState.wait_msg, content_types=types.ContentType.ANY)
 async def get_message(message: types.Message, state: FSMContext):
     await message.answer(
         'Хорошо, я запомнил сообщение, которое ты хочешь разослать\n' + 
@@ -22,14 +22,14 @@ async def get_message(message: types.Message, state: FSMContext):
         reply_markup=keyboard_builder
     )
     await state.update_data(message_id=message.message_id, chat_id=message.from_user.id)
-    await AdminState.build_kb.set()
+    await BroadcastingState.build_kb.set()
 
 
-@dp.callback_query_handler(state=AdminState.build_kb)
+@dp.callback_query_handler(state=BroadcastingState.build_kb)
 async def build_kb(call: types.CallbackQuery, state: FSMContext):
     if call.data == 'add_btn':
         await call.message.answer("Отправь текст для кнопки", reply_markup=None)
-        await AdminState.get_btn_txt.set()
+        await BroadcastingState.get_btn_txt.set()
     
     elif call.data == 'no_btn':
         await call.message.edit_reply_markup(reply_markup=None)
@@ -40,19 +40,19 @@ async def build_kb(call: types.CallbackQuery, state: FSMContext):
         chat_id = int(data.get('chat_id'))
     
         await confirm(call.message, message_id, chat_id)
-        await AdminState.confirmation.set()
+        await BroadcastingState.confirmation.set()
 
     await call.answer()
 
 
-@dp.message_handler(state=AdminState.get_btn_txt)
+@dp.message_handler(state=BroadcastingState.get_btn_txt)
 async def get_btn_txt(message: types.Message, state: FSMContext):
     await state.update_data(btn_txt=message.text)
     await message.answer('Теперь отправь ссылку')
-    await AdminState.get_btn_url.set()
+    await BroadcastingState.get_btn_url.set()
 
 
-@dp.message_handler(state=AdminState.get_btn_url)
+@dp.message_handler(state=BroadcastingState.get_btn_url)
 async def get_btn_url(message: types.Message, state: FSMContext):
     await state.update_data(btn_url=message.text)
     data = await state.get_data()
@@ -71,7 +71,7 @@ async def get_btn_url(message: types.Message, state: FSMContext):
     await confirm(message, message_id, chat_id, confirm_keyboard)
 
 
-@dp.message_handler(state=AdminState.get_btn_url)
+@dp.message_handler(state=BroadcastingState.get_btn_url)
 async def confirm(message: types.Message, message_id: int, chat_id: int, reply_markup: InlineKeyboardMarkup = None):
     await bot.copy_message(chat_id, chat_id, message_id, reply_markup=reply_markup)
     await message.answer(
@@ -93,10 +93,10 @@ async def confirm(message: types.Message, message_id: int, chat_id: int, reply_m
             ]
         )
     )
-    await AdminState.confirmation.set()
+    await BroadcastingState.confirmation.set()
 
 
-@dp.callback_query_handler(state=AdminState.confirmation)
+@dp.callback_query_handler(state=BroadcastingState.confirmation)
 async def decide_confirmation(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
@@ -108,6 +108,7 @@ async def decide_confirmation(call: types.CallbackQuery, state: FSMContext):
     if call.data == 'confirm':
         await call.message.edit_text('Начинаю рассылку', reply_markup=None)
 
+        await db.clean_broadcasting_table()  # pre-check
         await db.fill_broadcasting_table()  # in
         
         count = await broadcaster(bot, chat_id, message_id, btn_txt, btn_url)

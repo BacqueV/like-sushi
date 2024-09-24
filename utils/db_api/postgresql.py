@@ -50,7 +50,8 @@ class Database:
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         username varchar(255) NULL,
-        telegram_id BIGINT NOT NULL UNIQUE
+        telegram_id BIGINT NOT NULL UNIQUE,
+        is_admin BOOLEAN DEFAULT FALSE NOT NULL
         );
         """
         await self.execute(sql, execute=True)
@@ -86,7 +87,7 @@ class Database:
     async def update_user_username(self, username, telegram_id):
         sql = "UPDATE users SET username=$1 WHERE telegram_id=$2"
         return await self.execute(sql, username, telegram_id, execute=True)
-
+    
     async def delete_users(self):
         await self.execute("DELETE FROM users WHERE TRUE", execute=True)
 
@@ -107,3 +108,45 @@ class Database:
 
     async def clean_broadcasting_table(self):
         await self.execute("DELETE FROM broadcasting WHERE TRUE;", execute=True)
+
+
+    """
+    Admin Panel
+    """
+
+    async def create_passwd_table(self):
+        await self.execute("CREATE TABLE IF NOT EXISTS admin_passwd (passwd text);", execute=True)
+
+    async def force_delete_passwd(self):
+        await self.execute("DELETE FROM admin_passwd WHERE TRUE", execute=True)
+
+    async def change_passwd(self, new_passwd):
+        await self.force_delete_passwd()
+        sql = f"INSERT INTO admin_passwd (passwd) VALUES($1)"
+        return await self.execute(sql, new_passwd, execute=True, fetchrow=True)
+
+    async def get_passwd(self):
+        passwd = await self.execute("SELECT * from admin_passwd WHERE TRUE;", fetchval=True)
+        return passwd
+
+    async def check_passwd(self, passwd):
+        real_passwd = await self.get_passwd()
+        return True if passwd == real_passwd else False
+
+    async def make_him_admin(self, telegram_id):
+        sql = "UPDATE users SET is_admin = true WHERE telegram_id=$1;"
+        return await self.execute(sql, telegram_id, execute=True)
+
+    async def remove_admin(self, telegram_id):
+        sql = "UPDATE users SET is_admin = false WHERE telegram_id=$1;"
+        return await self.execute(sql, telegram_id, execute=True)
+    
+    async def make_him_admin_magically(self, telegram_id, passwd):
+        if passwd == await self.get_passwd():
+            await self.make_him_admin(telegram_id)
+            return 1
+        return 0
+
+    async def admin_list(self):
+        sql = "SELECT * FROM users WHERE is_admin = TRUE;"
+        return await self.execute(sql, fetch=True)
