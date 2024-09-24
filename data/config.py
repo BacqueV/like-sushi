@@ -7,7 +7,6 @@ import asyncio
 env = Env()
 env.read_env()
 
-admins = []
 BOT_TOKEN = env.str("BOT_TOKEN")
 
 DB_USER = env.str("DB_USER")
