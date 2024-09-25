@@ -8,6 +8,7 @@ from data import config
 async def get_all_users(message: types.Message):
     if message.from_user.id in config.admins:
         await message.answer(
+            "/advert - отправить рекламное сообщение\n"
             "/userlist - Выводит список пользователей \n"
             "/cleandb - !ОПАСНО! Очищает БД пользователей \n"
             "/dropusers - !СМЕРТЕЛЬНО ОПАСНО! Удаляет БД пользователей с сервера. Для пересоздания нажать /start \n"
@@ -17,6 +18,8 @@ async def get_all_users(message: types.Message):
             "/adminadd - Добавить админа \n"
             "/adminremove - Разжаловать его с должности \n"
         )
+    else:
+        await message.reply("Только для админов :D")
 
 
 @dp.message_handler(text="/adminlist")
