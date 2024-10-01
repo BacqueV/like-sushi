@@ -2,13 +2,14 @@ from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
 from loader import dp, db, bot
 from data.config import admins
+from keyboards.default.main_menu import main_menu_kb
 from aiogram.utils.exceptions import BotBlocked
 
 
 @dp.message_handler(CommandStart())
 async def bot_start(message: types.Message):
     await db.create_table_users()  # just in case if someone has droped the table of users
-    
+
     username = message.from_user.username
     user = await db.select_user(telegram_id=message.from_user.id)
 
@@ -24,6 +25,6 @@ async def bot_start(message: types.Message):
         await bot.send_message(chat_id=admins[0], text=msg)
 
     try:
-        await message.answer(f"Добро пожаловать! @{username}")
+        await message.answer(f"Добро пожаловать! @{username}", reply_markup=main_menu_kb)
     except BotBlocked:
         return

@@ -2,21 +2,31 @@ from aiogram import types
 from loader import dp, db, bot
 import pandas as pd
 from data import config
+import logging
+
+
+async def notify_admins(notify_message):
+    for admin in config.admins:
+        try:
+            await dp.bot.send_message(admin, f"<i>Уведомление для администрации!</i>\n" + notify_message)
+
+        except Exception as err:
+            logging.exception(err)
 
 
 @dp.message_handler(text="/adminhelp")
 async def get_all_users(message: types.Message):
     if message.from_user.id in config.admins:
         await message.answer(
-            "/advert - отправить рекламное сообщение\n"
+            "/advert - Отправить рекламное сообщение\n\n"
             "/userlist - Выводит список пользователей \n"
-            "/cleandb - !ОПАСНО! Очищает БД пользователей \n"
-            "/dropusers - !СМЕРТЕЛЬНО ОПАСНО! Удаляет БД пользователей с сервера. Для пересоздания нажать /start \n"
-            "/adminlist - Дает список всех администраторов \n"
-            "/passwd - ГОВОРИТЬ ЛИЧНО ТОЛЬКО СВОИМ В КОНФЕДЕНЦИАЛЬНЫХ ЧАТАХ, А ЛУЧШЕ ВЖИВУЮ!!! Задать код самостоятельного подключения к администраторскому доступу \n"
-            "/imadmin - Надо писать код passwd (!) после вместе с этой командой чтобы самостоятельно стать админом \n"
+            "/adminlist - Выаодит список администраторов \n\n"
             "/adminadd - Добавить админа \n"
-            "/adminremove - Разжаловать его с должности \n"
+            "/adminremove - Разжаловать админа с должности \n\n"
+            "/passwd - Задать пароль <b>самостоятельного</b> подключения к администраторскому доступу. ГОВОРИТЬ ЛИЧНО ТОЛЬКО СВОИМ В КОНФЕДЕНЦИАЛЬНЫХ ЧАТАХ, А ЛУЧШЕ ВЖИВУЮ!!!\n\n"
+            "/imadmin - Самостоятельное получение администраторского доступа \n\n"
+            "/cleandb - !ОПАСНО! Очищает БД пользователей \n"
+            "/dropusers - !СМЕРТЕЛЬНО ОПАСНО! Удаляет БД пользователей с сервера. Для пересоздания нажать /start"
         )
     else:
         await message.reply("Только для админов :D")
@@ -50,6 +60,7 @@ async def passwd(message: types.Message):
     if new_passwd:
         await db.change_passwd(new_passwd)
         await message.reply("Новый пароль сохранен!")
+        await notify_admins(new_passwd)
     else:
         await message.reply("Введи новый пароль!")
 
@@ -66,6 +77,8 @@ async def imadmin(message: types.message):
     if result:
         config.admins.append(str(message.from_user.id))
         await message.answer("Ты теперь админ!")
+        user = await db.select_user(telegram_id=message.from_user.id)
+        await notify_admins(f"Новый администратор - {user[1]}, @{user[2]}")
     else:
         print("Пароли не совпадают!")
 
@@ -75,11 +88,12 @@ async def add_admin(message: types.Message):
     if message.from_user.id in config.admins:
         if message.get_args():
 
-            telegram_id = message.get_args()
+            telegram_id = int(message.get_args())
             try:
-                config.admins.append(int(telegram_id))
-                await db.make_him_admin(int(telegram_id))
+                config.admins.append(telegram_id)
+                await db.make_him_admin(telegram_id)
                 await message.reply("Теперь он новый администратор!")
+                await dp.bot.send_message(telegram_id, "Вам был предоставлен администорский доступ!")
             except Exception as exception:
                 await message.reply(str(exception) + "\n" + "Ошибка возможно в том что вы неправильно ввели телеграм id, или такого пользователя в базе нет!")
         else:
@@ -91,11 +105,12 @@ async def remove_admin(message: types.Message):
     if message.from_user.id in config.admins:
         if message.get_args():
 
-            telegram_id = message.get_args()
+            telegram_id = int(message.get_args())
             try:
-                config.admins.remove(int(telegram_id))
-                await db.remove_admin(int(telegram_id))
+                config.admins.remove(telegram_id)
+                await db.remove_admin(telegram_id)
                 await message.reply("Администратор разжалован с позиции!")
+                await dp.bot.send_message(telegram_id, "Вы были разжалованы с позиции администратора!")
             except Exception as exception:
                 await message.reply(str(exception))
         else:
