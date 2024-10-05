@@ -49,12 +49,14 @@ class Database:
         CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
-        username varchar(255) NULL,
+        username VARCHAR(255) NULL,
         telegram_id BIGINT NOT NULL UNIQUE,
         is_admin BOOLEAN DEFAULT FALSE NOT NULL
         );
         """
         await self.execute(sql, execute=True)
+
+    # then create table with phone number and saved locations for every user + language settings
 
     @staticmethod
     def format_args(sql, parameters: dict):
@@ -150,3 +152,59 @@ class Database:
     async def admin_list(self):
         sql = "SELECT * FROM users WHERE is_admin = TRUE;"
         return await self.execute(sql, fetch=True)
+
+    """
+    Control meal categories
+    """
+
+    async def create_table_categories(self):
+        await self.execute(
+            """
+            CREATE TABLE IF NOT EXISTS categories (
+            category_id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            description TEXT
+            );
+            """, execute=True)
+
+    async def add_category(self, name, description):
+        sql = "INSERT INTO categories (name, description) VALUES($1, $2) returning *"
+        return await self.execute(sql, name, description, fetchrow=True)
+
+    async def list_categories(self):
+        sql = "SELECT * FROM categories"
+        return await self.execute(sql, fetch=True)
+
+    async def select_category(self, **kwargs):
+        sql = "SELECT * FROM categories WHERE "
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        return await self.execute(sql, *parameters, fetchrow=True)
+
+    async def create_table_meals(self):
+        await self.execute(
+            """
+            CREATE TABLE IF NOT EXISTS meals (
+            meal_id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            category VARCHAR(100) NOT NULL,
+            description TEXT NULL,
+            price DECIMAL NOT NULL,
+            sale BOOLEAN DEFAULT FALSE,
+            sale_price DECIMAL NULL,
+            included BOOLEAN DEFAULT TRUE
+            );
+            """, execute=True)
+
+    async def add_meal(self, name, category, description, price):
+        sql = "INSERT INTO categories (name, category, description, price) VALUES($1, $2, $3, $4) returning *"
+        return await self.execute(sql, name, category, description, price, fetchrow=True)
+
+    async def list_meals(self):
+        sql = "SELECT * FROM meals"
+        return await self.execute(sql, fetch=True)
+
+    async def select_meal(self, **kwargs):
+        sql = "SELECT * FROM meals WHERE "
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        return await self.execute(sql, *parameters, fetchrow=True)
+    
