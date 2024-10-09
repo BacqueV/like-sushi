@@ -14,10 +14,11 @@ async def notify_admins(notify_message):
             logging.exception(err)
 
 
-@dp.message_handler(text="/adminhelp")
+@dp.message_handler(text="/adminhelp", state="*")
 async def get_all_users(message: types.Message):
     if message.from_user.id in config.admins:
         await message.answer(
+            "/mcontrol - Открыть панель работы с позициями в меню\n\n"
             "/advert - Отправить рекламное сообщение\n\n"
             "/userlist - Выводит список пользователей \n"
             "/adminlist - Выаодит список администраторов \n\n"
@@ -25,8 +26,9 @@ async def get_all_users(message: types.Message):
             "/adminremove - Разжаловать админа с должности \n\n"
             "/passwd - Задать пароль <b>самостоятельного</b> подключения к администраторскому доступу. ГОВОРИТЬ ЛИЧНО ТОЛЬКО СВОИМ В КОНФЕДЕНЦИАЛЬНЫХ ЧАТАХ, А ЛУЧШЕ ВЖИВУЮ!!!\n\n"
             "/imadmin - Самостоятельное получение администраторского доступа \n\n"
-            "/cleandb - !ОПАСНО! Очищает БД пользователей \n"
-            "/dropusers - !СМЕРТЕЛЬНО ОПАСНО! Удаляет БД пользователей с сервера. Для пересоздания нажать /start"
+            "/cleandb - <b>ОПАСНО!</b> Очищает БД пользователей \n"
+            "/dropusers - <b>СМЕРТЕЛЬНО ОПАСНО!</b> Удаляет БД пользователей с сервера. Для пересоздания нажать /start\n\n"
+            "/profile - Введите <b>Telegram ID</b> пользователя вместе с этой командой и получите его профиль, если позваляют найстроки конфеденциальности"
         )
     else:
         await message.reply("Только для админов :D")

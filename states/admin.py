@@ -11,3 +11,13 @@ class BroadcastingState(StatesGroup):
 
 class AdminPanelState(StatesGroup):
     mainmenu = State()
+
+
+class MControlState(StatesGroup):
+    main_menu = State()
+    await_name = State()
+    await_description = State()
+    await_price = State()
+    await_sale_price = State()
+    await_category = State()
+    confirmation = State()

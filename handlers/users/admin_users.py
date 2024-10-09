@@ -41,3 +41,21 @@ async def get_all_users(message: types.Message):
     if message.from_user.id in config.admins:
         await db.drop_users()
         await message.answer("База данных пользователей удалена!")
+
+
+@dp.message_handler(commands='profile')
+async def get_user_profile(message: types.Message):
+    if message.from_user.id in config.admins:
+        try:
+            telegram_id = int(message.get_args())
+        except (TypeError, ValueError):
+            await message.reply(
+                "Введите <b>Telegram ID</b> пользователя вместе с командой, обычно оно хранится в числовых значениях :/"
+            )
+
+        user = await db.select_user(telegram_id=telegram_id)
+        if user:
+            text = f'Ссылка на профиль пользователя: <a href="tg://user?id={telegram_id}">{user[1]}</a>'
+            await message.reply(text, parse_mode='HTML')
+        else:
+            await message.reply("Такого пользователя нет в базе!")
