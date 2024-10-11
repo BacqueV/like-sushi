@@ -89,7 +89,7 @@ class Database:
     async def update_user_username(self, username, telegram_id):
         sql = "UPDATE users SET username=$1 WHERE telegram_id=$2"
         return await self.execute(sql, username, telegram_id, execute=True)
-    
+
     async def delete_users(self):
         await self.execute("DELETE FROM users WHERE TRUE", execute=True)
 
@@ -171,6 +171,9 @@ class Database:
         sql = "INSERT INTO categories (name, description) VALUES($1, $2) returning *"
         return await self.execute(sql, name, description, fetchrow=True)
 
+    async def delete_category(self, category_id):
+        return await self.execute("DELETE FROM categories WHERE category_id = $1", category_id, execute=True)
+
     async def list_categories(self):
         sql = "SELECT * FROM categories"
         return await self.execute(sql, fetch=True)
@@ -179,6 +182,10 @@ class Database:
         sql = "SELECT * FROM categories WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
+    
+    async def update_category_data(self, name, description, category_id):
+        sql = "UPDATE categories SET name=$1, description=$2 WHERE category_id=$3"
+        return await self.execute(sql, name, description, category_id, execute=True)
 
     async def create_table_meals(self):
         await self.execute(
@@ -198,6 +205,9 @@ class Database:
     async def add_meal(self, name, category, description, price):
         sql = "INSERT INTO categories (name, category, description, price) VALUES($1, $2, $3, $4) returning *"
         return await self.execute(sql, name, category, description, price, fetchrow=True)
+    
+    async def delete_meal(self, category_id):
+        return await self.execute("DELETE FROM categories WHERE category_id = $1", category_id, execute=True)
 
     async def list_meals(self):
         sql = "SELECT * FROM meals"
