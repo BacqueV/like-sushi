@@ -21,7 +21,13 @@ async def bot_start(message: types.Message):
         )
         # informing admins
         count = await db.count_users()
-        msg = f"У нас новый пользователей! @{user[2]}\n" + f"Общее количество пользователей - {count}"
+
+        msg = f"У нас новый пользователь!\n\n"
+
+        f"<a href='tg://user?id={user[-2]}'>{user[1]}</a>, @{user[2]}\n\n"
+
+        f"<b>Общее количество пользователей - {count}</b>"
+
         await bot.send_message(chat_id=admins[0], text=msg)
 
     try:

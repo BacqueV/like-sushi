@@ -15,21 +15,33 @@ class AdminPanelState(StatesGroup):
 
 class MControlState(StatesGroup):
     main_menu = State()
-  
+
+    # await ID
     await_id_delete = State()
     await_id_manage = State()
+    await_id_meal = State()
 
-    await_name = State()
-    await_description = State()
-  
+    # await NAME
+    await_name_category = State()
+    await_name_meal = State()
+
+    # await description
+    await_description_category = State()
+    await_description_meal = State()
+
+    # await DATA for MEAL
     await_price = State()
-    await_sale_price = State()
-  
+    await_sale_price = State()  
     await_category = State()
-  
-    confirmation_add = State()
-    confirmation_delete = State()
 
+    # confirmation
+    confirmation_add_category = State()
+    confirmation_add_meal = State()
+
+    confirmation_delete_category = State()
+    confirmation_delete_meal = State()
+
+    # EDIT category
     manage_menu = State()
     edit_category = State()
     confirm_category = State()

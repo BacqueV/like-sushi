@@ -6,13 +6,19 @@ from aiogram.dispatcher import FSMContext
 from keyboards.inline.advert import keyboard_builder
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from utils.broadcast import broadcaster
+from keyboards.inline.menu_control import quit_anything
 
 
 @dp.message_handler(text='/advert', user_id=admins)
 async def wait_msg(message: types.Message):
-    await message.answer("Приступаем к созданию рассылки!\n" + "<b>Отправь сообщение для рассылки</b>")
+    await message.answer("Приступаем к созданию рассылки!\n" + "<b>Отправь сообщение для рассылки</b>", reply_markup=quit_anything)
     await BroadcastingState.wait_msg.set()
 
+
+@dp.callback_query_handler(text='quit_anything', state=BroadcastingState.wait_msg)
+async def quit_advertising(call: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    await call.message.edit_text("<i>Вы отменили рекламную рассылку!</i>", reply_markup=types.InlineKeyboardMarkup())
 
 @dp.message_handler(state=BroadcastingState.wait_msg, content_types=types.ContentType.ANY)
 async def get_message(message: types.Message, state: FSMContext):
@@ -112,7 +118,10 @@ async def decide_confirmation(call: types.CallbackQuery, state: FSMContext):
         await db.fill_broadcasting_table()  # in
         
         count = await broadcaster(bot, chat_id, message_id, btn_txt, btn_url)
-        await call.message.answer(f"Успешно разослали сообщение [{count}] пользователям!")
+        await call.message.answer(
+            f"Успешно разослали сообщение [{count}] пользователям!\n\n"
+            "<b>Рассылка окончена!</b>"
+        )
         
         await db.clean_broadcasting_table()  # out
 
