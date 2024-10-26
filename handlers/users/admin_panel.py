@@ -8,13 +8,12 @@ import logging
 async def notify_admins(notify_message):
     for admin in config.admins:
         try:
-            await dp.bot.send_message(admin, f"<i>Уведомление для администрации!</i>\n" + notify_message)
-
+            await dp.bot.send_message(admin, f"<i>Уведомление для администрации!</i>\n\n" + notify_message)
         except Exception as err:
             logging.exception(err)
 
 
-@dp.message_handler(text="/adminhelp", state="*")
+@dp.message_handler(text="/adminhelp")
 async def get_all_users(message: types.Message):
     if message.from_user.id in config.admins:
         await message.answer(
@@ -60,32 +59,28 @@ async def passwd(message: types.Message):
     if new_passwd:
         await db.change_passwd(new_passwd)
         await message.reply("Новый пароль сохранен!")
-        await notify_admins(new_passwd)
+        await notify_admins(f"Новый пароль: {new_passwd}")
     else:
         await message.reply("Введи новый пароль!")
 
 
 @dp.message_handler(commands='imadmin')
-async def imadmin(message: types.message):
+async def imadmin(message: types.Message):
     passwd = message.get_args()
-    if not passwd:
-        await message.reply("Введи пароль вместе с командой!")
-        return 0
-
     result = await db.make_him_admin_magically(message.from_user.id, passwd)
 
     if result:
-        config.admins.append(str(message.from_user.id))
+        config.admins.append(message.from_user.id)
         await message.answer("Ты теперь админ!")
         user = await db.select_user(telegram_id=message.from_user.id)
         await notify_admins(
-            f"Новый администратор - <a href='tg://user?id={user[-2]}'>{user[1]}</a>, @{user[2]}\n\n"
+            f"Новый администратор - <a href='tg://user?id={user[-2]}'>{user[1]}</a>, @{user[2]}\n"
             "<b>Самостоятельный доступ!</b>"
         )
     else:
         await notify_admins(
-            f"Кто-то пытался стать админом!\n\n"
-            ""
+            f"<a href='tg://user?id={message.from_user.id}'>{message.from_user.full_name}</a>, @{message.from_user.username}\n" +\
+            "Пытался стать админом!"
         )
 
 

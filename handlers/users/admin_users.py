@@ -55,3 +55,20 @@ async def get_user_profile(message: types.Message):
                 "Напишите <b>Telegram ID</b> или же <b>Username</b> пользователя вместе с командой чтобы открыть его профиль!\n\n"
                 "Чтобы узнать <b>нужные данные</b> введите /userlist и, если позволят настройки конфеденциальности вы получите профиль пользователя!"
             )
+
+@dp.message_handler(commands="udelete")
+async def delete_user(message: types.Message):
+    if message.from_user.id in config.admins:
+        try:
+            telegram_id = int(message.get_args())
+        except ValueError:
+            await message.reply("Введите Telegram ID пользователя вместе с командой!")
+            return
+
+        user = await db.select_user(telegram_id=telegram_id)
+        if user is not None:
+            name = user[1]
+            await db.delete_user(telegram_id)
+            await message.reply(f"Пользователь {name} удален!")
+        else:
+            await message.reply("Такого пользователя в БД нет!")
