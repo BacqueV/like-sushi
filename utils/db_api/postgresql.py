@@ -46,7 +46,7 @@ class Database:
 
     async def create_table_users(self):
         sql = """
-        CREATE TABLE IF NOT EXISTS Users (
+        CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
         username VARCHAR(255) NULL,
@@ -70,34 +70,34 @@ class Database:
     """
 
     async def add_user(self, full_name, username, telegram_id):
-        sql = "INSERT INTO Users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
+        sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
         return await self.execute(sql, full_name, username, telegram_id, fetchrow=True)
 
     async def select_all_users(self):
-        sql = "SELECT * FROM Users"
+        sql = "SELECT * FROM users"
         return await self.execute(sql, fetch=True)
 
     async def select_user(self, **kwargs):
-        sql = "SELECT * FROM Users WHERE "
+        sql = "SELECT * FROM users WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
 
     async def count_users(self):
-        sql = "SELECT COUNT(*) FROM Users"
+        sql = "SELECT COUNT(*) FROM users"
         return await self.execute(sql, fetchval=True)
 
     async def update_user_username(self, username, telegram_id):
-        sql = "UPDATE Users SET username=$1 WHERE telegram_id=$2"
+        sql = "UPDATE users SET username=$1 WHERE telegram_id=$2"
         return await self.execute(sql, username, telegram_id, execute=True)
 
     async def delete_users(self):
-        await self.execute("DELETE FROM Users WHERE TRUE", execute=True)
+        await self.execute("DELETE FROM users WHERE TRUE", execute=True)
 
     async def delete_user(self, telegram_id):
-        await self.execute("DELETE FROM Users WHERE telegram_id = $1", telegram_id, execute=True)
+        await self.execute("DELETE FROM users WHERE telegram_id = $1", telegram_id, execute=True)
 
     async def drop_users(self):
-        await self.execute("DROP TABLE Users", execute=True)
+        await self.execute("DROP TABLE users", execute=True)
 
     """
     Broadcasting
@@ -108,7 +108,7 @@ class Database:
         await self.execute(sql, execute=True)
         
     async def fill_broadcasting_table(self):
-        sql = "INSERT INTO broadcasting (telegram_id, status, description) SELECT telegram_id, 'waiting', null FROM Users;"
+        sql = "INSERT INTO broadcasting (telegram_id, status, description) SELECT telegram_id, 'waiting', null FROM users;"
         await self.execute(sql, execute=True)
 
     async def clean_broadcasting_table(self):
@@ -139,11 +139,11 @@ class Database:
         return True if passwd == real_passwd else False
 
     async def make_him_admin(self, telegram_id):
-        sql = "UPDATE Users SET is_admin = true WHERE telegram_id=$1;"
+        sql = "UPDATE users SET is_admin = true WHERE telegram_id=$1;"
         return await self.execute(sql, telegram_id, execute=True)
 
     async def remove_admin(self, telegram_id):
-        sql = "UPDATE Users SET is_admin = false WHERE telegram_id=$1;"
+        sql = "UPDATE users SET is_admin = false WHERE telegram_id=$1;"
         return await self.execute(sql, telegram_id, execute=True)
     
     async def make_him_admin_magically(self, telegram_id, passwd):
@@ -153,7 +153,7 @@ class Database:
         return False
 
     async def admin_list(self):
-        sql = "SELECT * FROM Users WHERE is_admin = TRUE;"
+        sql = "SELECT * FROM users WHERE is_admin = TRUE;"
         return await self.execute(sql, fetch=True)
 
     """
@@ -165,8 +165,12 @@ class Database:
             """
             CREATE TABLE IF NOT EXISTS categories (
             category_id SERIAL PRIMARY KEY,
+            
             name VARCHAR(100) NOT NULL,
-            description TEXT
+            description TEXT,
+            
+            sale BOOLEAN DEFAULT FALSE,
+            sale_percent SMALLINT
             );
             """, execute=True)
 
@@ -186,22 +190,28 @@ class Database:
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
     
-    async def update_category_data(self, name, description, category_id):
-        sql = "UPDATE categories SET name=$1, description=$2 WHERE category_id=$3"
-        return await self.execute(sql, name, description, category_id, execute=True)
+    async def update_category_data(self, name, description, sale, sale_percent, category_id):
+        sql = "UPDATE categories SET name=$1, description=$2, sale=$3, sale_percent=$4 WHERE category_id=$5"
+        return await self.execute(sql, name, description, sale, sale_percent, category_id, execute=True)
 
     async def create_table_meals(self):
         await self.execute(
             """
             CREATE TABLE IF NOT EXISTS meals (
             meal_id SERIAL PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
+            
             category VARCHAR(100) NOT NULL,
+            
+            name VARCHAR(100) NOT NULL,
             description TEXT NULL,
+            
             price DECIMAL NOT NULL,
+            included BOOLEAN DEFAULT TRUE,
+            
             sale BOOLEAN DEFAULT FALSE,
+            
             sale_price DECIMAL NULL,
-            included BOOLEAN DEFAULT TRUE
+            sale_percent SMALLINT
             );
             """, execute=True)
 
