@@ -214,7 +214,7 @@ async def category_delete_confirmation(call: types.CallbackQuery, state: FSMCont
         await notify_admins(
             f"Категория <b>{category_name}</b> и все блюда принадлежащие ей были удалены!"
         )    
-    await back_to_menu()
+    await back_to_menu(call)
 
 """
 Manage category
