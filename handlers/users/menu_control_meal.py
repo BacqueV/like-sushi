@@ -1,5 +1,4 @@
 import asyncio
-import pandas as pd
 from data import config
 from aiogram import types
 from loader import dp, db, bot
@@ -7,6 +6,7 @@ from aiogram.dispatcher import FSMContext
 from keyboards.inline import menu_control
 from states.admin import MControlState
 from handlers.users.admin_panel import notify_admins
+
 
 async def back_to_menu(call: types.CallbackQuery):
     await asyncio.sleep(.5)
@@ -22,6 +22,10 @@ Add Meal
 
 @dp.callback_query_handler(text="add_meal", state=MControlState.main_menu)
 async def add_meal(call: types.CallbackQuery):
+    if len(await db.list_categories()) == 0:
+        await call.answer("Для начала вам нужно добавит хотя бы одну категорию блюд", show_alert=True)
+        return
+
     await MControlState.await_name_meal.set()
     await call.message.edit_text(
         "<b>Вы добавляете новое блюдо</b>\n\n" "Введите имя блюда",

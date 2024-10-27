@@ -32,32 +32,42 @@ async def open_menu(message: types.Message):
 async def list_categories(call: types.CallbackQuery):
     categories = await db.list_categories()
     if len(categories) == 0:
-        await call.message.answer("<b>Меню пусто!</b>")
-        await back_to_menu(call)
+        await call.answer("Меню пусто!", show_alert=False)
         return
 
     category_id = []
     name = []
     description = []
+    category_sale = []
+    category_sale_percent = []
     for category in categories:
         category_id.append(category[0])
+        
         name.append(category[1])
         description.append(category[2])
+        
+        category_sale.append(category[3])
+        category_sale_percent.append(category[4])
     data = {
-        "Category ID": category_id,
+        "ID": category_id,
         "Name": name,
-        "Description": description
+        "Description": description,
+        "Sale": category_sale,
+        "%": category_sale_percent
     }
     pd.options.display.max_rows = 10000
     df = pd.DataFrame(data)
 
     await call.message.edit_text("<i>Открываем список категорий</i>", reply_markup=types.InlineKeyboardMarkup())
 
-    if len(df) > 50:
-        for x in range(0, len(df), 50):
-            await bot.send_message(call.message.chat.id, df[x:x + 50])
+    chunk_size = 50
+    if len(df) > chunk_size:
+        for x in range(0, len(df), chunk_size):
+            message = df[x:x + chunk_size].to_string(index=False)
+            await bot.send_message(call.message.chat.id, message)
     else:
-        await bot.send_message(call.message.chat.id, df)
+        await bot.send_message(call.message.chat.id, df.to_string(index=False))
+
     await asyncio.sleep(1)
     await call.message.answer("Вы открыли меню работы с категориями и блюдами", reply_markup=menu_control.main_menu)
 
@@ -163,6 +173,11 @@ Delete category
 
 @dp.callback_query_handler(text='delete_category', state=MControlState.main_menu)
 async def delete_category(call: types.CallbackQuery):
+    categories = await db.list_categories()
+    if len(categories) == 0:
+        await call.answer("Нет категорий для удаления!")
+        return
+    
     await MControlState.await_id_delete.set()
     await call.message.edit_text(
         "<b>Введите ID категории для удаления</b>\n\n"
@@ -174,7 +189,7 @@ async def delete_category(call: types.CallbackQuery):
 # quit deleting category
 @dp.callback_query_handler(text='quit_anything', state=MControlState.await_id_delete)
 async def quit_deleting(call: types.CallbackQuery):
-    await call.message.edit_text("<i>Вы отменили удаление категории</i>")
+    await call.message.edit_text("<i>Вы отменили удаление категории</i>", reply_markup=None)
     await back_to_menu(call)
 
 
@@ -189,10 +204,13 @@ async def await_id_delete(message: types.Message, state: FSMContext):
             await MControlState.confirmation_delete_category.set()
             await message.reply(
                 "<b>Подтвердите удаление категории!</b>\n"
-                "<b>Все блюда принадлежащие этой категории будут удалены!</b>\n\n"
+                "<b>Все блюда принадлежащие этой категории будут удалены!</b>\n\n" + \
+                ("<b>Какие данные будем править?</b>\n\n"
                 f"<b>ID</b>: {category[0]}\n"
                 f"<b>Имя</b>: {category[1]}\n"
-                f"<b>Описание</b>: {category[2]}",
+                f"<b>Описание</b>: {category[2]}\n"
+                f"<b>Скидка</b>: {category[3]}\n") + \
+                (f"<b>Величина скидки</b>: {category[4]}%" if category[3] else ""),
                 reply_markup=menu_control.confirmation
             )
         else:
