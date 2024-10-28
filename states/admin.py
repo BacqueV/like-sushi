@@ -45,5 +45,8 @@ class MControlState(StatesGroup):
 
     # EDIT category
     manage_menu = State()
+    manage_menu_meal = State()
     edit_category = State()
+    edit_meal = State()
     confirm_category = State()
+    confirm_meal = State()

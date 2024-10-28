@@ -255,8 +255,8 @@ async def manage_category(call: types.CallbackQuery):
     await MControlState.await_id_manage.set()
     await call.message.edit_text(
         "Введите <b>ID</b> категории для правки\n\n"
-        "Узнать вы это можете воспользовавшись другой командой из главного меню. "
-        "<b>ID</b> будет являться колонка справа",
+        "Узнать вы это можете воспользовавшись другой командой из главного меню\n\n"
+        "<b>ID</b> будет являться колонка слева",
         reply_markup=menu_control.quit_anything
     )
 
@@ -345,8 +345,9 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
         category_sale = data.get('category_sale')
         category_sale_percent = data.get('category_sale_percent')
 
-        if name and description and category_id and category_sale and category_sale_percent:
-            await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
+
+        await db.update_category_data(name, description, category_sale, int(category_sale_percent), int(category_id))
+
         await call.message.edit_text(
             "<i>Данные для категории сохранены!</i>",
             reply_markup=None
@@ -439,8 +440,7 @@ async def quit_managing_category(call: types.CallbackQuery, state: FSMContext):
 async def await_data_manage(message: types.Message, state: FSMContext):    
     data = await state.get_data()
     edit = data.get('edit')
-    category_sale = data.get('category_sale')
-    
+
     if edit == "name":
         await state.update_data(name=message.text)
     elif edit == "description":
@@ -454,7 +454,7 @@ async def await_data_manage(message: types.Message, state: FSMContext):
                     await state.update_data(category_sale_percent=percent)
                 else:
                     await state.update_data(category_sale=False)
-                    await state.update_data(category_sale_percent=None)
+                    await state.update_data(category_sale_percent=0)
             else:
                 await message.reply("В допустимых значениях!")
                 return
@@ -524,7 +524,7 @@ async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
                 )
             )
     else:
-        await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
+        await db.update_category_data(name, description, category_sale, int(category_sale_percent), int(category_id))
 
         await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=None)
         await state.finish()
@@ -543,7 +543,7 @@ async def confirm_category(call: types.CallbackQuery, state=FSMContext):
 
     if call.data == "accept":
 
-        await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
+        await db.update_category_data(name, description, category_sale, int(category_sale_percent), int(category_id))
 
         await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=None)
         await state.finish()

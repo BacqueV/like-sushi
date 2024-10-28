@@ -170,7 +170,7 @@ class Database:
             description TEXT,
             
             sale BOOLEAN DEFAULT FALSE,
-            sale_percent SMALLINT
+            sale_percent SMALLINT DEFAULT 0
             );
             """, execute=True)
 
@@ -205,9 +205,9 @@ class Database:
             name VARCHAR(100) NOT NULL,
             description TEXT NULL,
             
-            price DECIMAL NOT NULL,
+            price INTEGER NOT NULL,
             sale BOOLEAN DEFAULT FALSE,
-            sale_percent SMALLINT,
+            sale_percent SMALLINT DEFAULT 0,
             
             included BOOLEAN DEFAULT TRUE
             );
@@ -226,6 +226,14 @@ class Database:
     async def list_meals(self):
         sql = "SELECT * FROM meals"
         return await self.execute(sql, fetch=True)
+
+    async def update_meal_data(self, category_id, name, description, price, sale, sale_percent, included, meal_id):
+        sql = "UPDATE meals SET category_id=$1, name=$2, description=$3, price=$4, sale=$5, sale_percent=$6, included=$7 WHERE meal_id=$8"
+        return await self.execute(sql, category_id, name, description, price, sale, sale_percent, included, meal_id, execute=True)
+    
+    async def update_included(self, new_state, meal_id):
+        sql = "UPDATE meals SET included=$1 WHERE meal_id=$2"
+        return await self.execute(sql, new_state, meal_id, execute=True)
 
     async def select_meal(self, **kwargs):
         sql = "SELECT * FROM meals WHERE "

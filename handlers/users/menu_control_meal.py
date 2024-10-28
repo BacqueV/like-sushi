@@ -67,7 +67,7 @@ async def save_name_meal(message: types.Message, state: FSMContext):
 
 
 @dp.callback_query_handler(state=MControlState.await_category)
-async def save_meal_category(call: types.CallbackQuery, state: FSMContext):
+async def save_meals_category(call: types.CallbackQuery, state: FSMContext):
     await state.update_data(category_id=call.data)
     category = await db.select_category(category_id=int(call.data))
 
@@ -148,7 +148,7 @@ async def meal_add_confirmation(call: types.CallbackQuery, state: FSMContext):
         description = data.get('description')
         price = data.get('price')
 
-        await db.add_meal(int(category_id), name, description, float(price))
+        await db.add_meal(int(category_id), name, description, int(price))
         
         await call.message.edit_text(
             "<i>Вы добавили новое блюдо</i>\n\n",
@@ -159,7 +159,7 @@ async def meal_add_confirmation(call: types.CallbackQuery, state: FSMContext):
         )
     else:
         await call.message.edit_text(
-            "<i>Вы отменили добавление новой категории</i>",
+            "<i>Вы отменили добавление нового блюда</i>",
             reply_markup=None
         )
     await back_to_menu(call)
@@ -183,7 +183,7 @@ async def delete_meal(call: types.CallbackQuery):
     )
 
 
-# quit deleting category
+# quit deleting meal
 @dp.callback_query_handler(text='quit_anything', state=MControlState.await_id_delete_meal)
 async def quit_deleting(call: types.CallbackQuery):
     await call.message.edit_text("<i>Вы отменили удаление блюда</i>", reply_markup=None)
@@ -207,7 +207,7 @@ async def await_id_delete_meal(message: types.Message, state: FSMContext):
                 f"<b>Имя:</b> {meal[2]}\n") + \
                 f"<b>Цена:</b> {meal[4]}\n" +\
                 (f"<b>Описание:</b> {meal[3]}\n") + \
-                (f"<b>Категория:</b> {category[1]}\n" if category else "<b>Категория:</b> Была удалена}\n") + \
+                (f"<b>Категория:</b> {category[1]}\n" if category else "<b>Категория:</b> Была удалена\n") + \
                 (f"<b>Скидка:</b> {meal[5]}\n") + \
                 (f"<b>Величина скидки</b>: {meal[6]}%" if meal[5] else ""),
                 reply_markup=menu_control.confirmation
@@ -250,47 +250,54 @@ async def manage_meal(call: types.CallbackQuery):
         await call.answer("Нет блюд для правки!", show_alert=False)
         return
 
-    await MControlState.await_id_manage.set()
+    await MControlState.await_id_manage_meal.set()
     await call.message.edit_text(
-        "Введите <b>ID</b> категории для правки\n\n"
-        "Узнать вы это можете воспользовавшись другой командой из главного меню. "
-        "<b>ID</b> будет являться колонка справа",
+        "Введите <b>ID</b> блюда для правки\n\n"
+        "Узнать вы это можете открыв меню\n\n"
+        "<b>ID</b> будет являться колонка слева",
         reply_markup=menu_control.quit_anything
     )
 
 
-# quit managing category
-@dp.callback_query_handler(text='quit_anything', state=MControlState.await_id_manage)
+# quit managing meal
+@dp.callback_query_handler(text='quit_anything', state=MControlState.await_id_manage_meal)
 async def quit_managing(call: types.CallbackQuery):
-    await call.message.edit_text("<i>Вы отменили изменения в категориях</i>", reply_markup=None)
+    await call.message.edit_text("<i>Вы отменили правки в параметрах блюд</i>", reply_markup=None)
     await back_to_menu(call)
 
 
 # continue managing
-@dp.message_handler(state=MControlState.await_id_manage)
-async def await_id_manage(message: types.Message, state: FSMContext):
+@dp.message_handler(state=MControlState.await_id_manage_meal)
+async def await_id_manage_meal(message: types.Message, state: FSMContext):
     try:
-        category = await db.select_category(category_id=int(message.text))
+        meal = await db.select_meal(meal_id=int(message.text))
 
-        if category:
+        if meal:
+            category = await db.select_category(category_id=meal[1])
 
             await state.update_data(
-                category_id=category[0],
-                name=category[1],
-                description=category[2],
-                category_sale=category[3],
-                category_sale_percent=category[4]
+                meal_id=meal[0],
+                category_id=meal[1],
+                name=meal[2],
+                description=meal[3],
+                price=meal[4],
+                meal_sale=meal[5],
+                meal_sale_percent=meal[6],
+                included=meal[-1]
             )
 
-            await MControlState.manage_menu.set()
+            await MControlState.manage_menu_meal.set()
 
             await message.reply(
-                ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category[0]}\n"
-                f"<b>Имя</b>: {category[1]}\n"
-                f"<b>Описание</b>: {category[2]}\n"
-                f"<b>Скидка</b>: {category[3]}\n") + \
-                (f"<b>Величина скидки</b>: {category[4]}%" if category[3] else ""),
+                "<b>Подтвердите удаление блюда!</b>\n\n" + \
+                (f"<b>ID:</b> {meal[0]}\n"
+                f"<b>Есть в меню:</b> {meal[-1]}\n"
+                f"<b>Имя:</b> {meal[2]}\n") + \
+                f"<b>Цена:</b> {meal[4]}\n" +\
+                (f"<b>Описание:</b> {meal[3]}\n") + \
+                (f"<b>Категория:</b> {category[1]}\n" if category else "<b>Категория:</b> Была удалена\n") + \
+                (f"<b>Скидка:</b> {meal[5]}\n") + \
+                (f"<b>Величина скидки</b>: {meal[6]}%" if meal[5] else ""),
                 reply_markup=types.InlineKeyboardMarkup(
                     row_width=1,
                     inline_keyboard=[
@@ -309,7 +316,13 @@ async def await_id_manage(message: types.Message, state: FSMContext):
                         [
                             types.InlineKeyboardButton(
                                 text="Скидка",
-                                callback_data='category_sale'
+                                callback_data='meal_sale'
+                            )
+                        ],
+                        [
+                            types.InlineKeyboardButton(
+                                text="Включено в меню",
+                                callback_data='included'
                             )
                         ]
                     ]
@@ -325,28 +338,33 @@ async def await_id_manage(message: types.Message, state: FSMContext):
                 )
             )
         else:
-             await message.reply("Такой категории нет!")
+             await message.reply("Такого блюда нет!")
     except ValueError:
         await message.reply("<b>ID</b> хранится в числовых значениях!")
 
 
 # editing
-@dp.callback_query_handler(state=MControlState.manage_menu)
+@dp.callback_query_handler(state=MControlState.manage_menu_meal)
 async def save_or_not(call: types.CallbackQuery, state: FSMContext):
-    if call.data == "saveit":
-        data = await state.get_data()
-        category_id = data.get('category_id')
+    data = await state.get_data()
         
-        name = data.get('name')
-        description = data.get('description')
-        
-        category_sale = data.get('category_sale')
-        category_sale_percent = data.get('category_sale_percent')
+    meal_id = data.get('meal_id')
+    category_id = data.get('category_id')
+    
+    name = data.get('name')
+    description = data.get('description')
 
-        if name and description and category_id and category_sale and category_sale_percent:
-            await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
+    price = data.get('price')
+    meal_sale = data.get('meal_sale')
+    meal_sale_percent = data.get('meal_sale_percent')
+
+    included = data.get('included')
+
+    if call.data == "saveit":
+        await db.update_meal_data(int(category_id), name, description, int(price), meal_sale, int(meal_sale_percent), included, int(meal_id))
+
         await call.message.edit_text(
-            "<i>Данные для категории сохранены!</i>",
+            "<i>Данные для блюда сохранены!</i>",
             reply_markup=None
         )
         await state.finish()
@@ -354,7 +372,7 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
 
     elif call.data == "back":
         await call.message.edit_text(
-            "<i>Отменяем правки в категориях!</i>",
+            "<i>Отменяем правки в блюдах!</i>",
             reply_markup=None
         )
         await back_to_menu(call)
@@ -363,40 +381,129 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
         if call.data == "name":
             edit_data = "имя"
             await state.update_data(edit=call.data)
+        elif call.data == "included":
+            category = await db.select_category(category_id=category_id)
+
+            meal = await db.select_meal(meal_id=meal_id)
+
+            included = meal[-1]
+            new_state = not included
+
+            await db.update_included(new_state, meal_id)
+            meal_new = await db.select_meal(meal_id=meal_id)
+            
+            await MControlState.manage_menu_meal.set()
+            await call.message.edit_text(
+                        "<b>Подтвердите удаление блюда!</b>\n\n" + \
+                        (f"<b>ID:</b> {meal_id}\n"
+                        f"<b>Есть в меню:</b> {meal_new[-1]}\n"
+                        f"<b>Имя:</b> {name}\n") + \
+                        f"<b>Цена:</b> {price}\n" +\
+                        (f"<b>Описание:</b> {description}\n") + \
+                        (f"<b>Категория:</b> {category[1]}\n" if category else "<b>Категория:</b> Была удалена\n") + \
+                        (f"<b>Скидка:</b> {meal_sale}\n") + \
+                        (f"<b>Величина скидки</b>: {meal_sale_percent}%" if meal_sale else ""),
+                        reply_markup=types.InlineKeyboardMarkup(
+                            row_width=1,
+                            inline_keyboard=[
+                                [
+                                    types.InlineKeyboardButton(
+                                        text="Имя",
+                                        callback_data='name'
+                                    )
+                                ],
+                                [
+                                    types.InlineKeyboardButton(
+                                        text="Описание",
+                                        callback_data='description'
+                                    )
+                                ],
+                                [
+                                    types.InlineKeyboardButton(
+                                        text="Скидка",
+                                        callback_data='meal_sale'
+                                    )
+                                ],
+                                [
+                                    types.InlineKeyboardButton(
+                                        text="Включено в меню",
+                                        callback_data='included'
+                                    )
+                                ]
+                            ]
+                        ).row(
+                            types.InlineKeyboardButton(
+                                text="Сохранить",
+                                callback_data='saveit'
+                            ),
+                            types.InlineKeyboardButton(
+                                text="Отменить",
+                                callback_data='back'
+                            )
+                        )
+                    )
         elif call.data == "description":
             edit_data = "описание"
             await state.update_data(edit=call.data)
-        elif call.data == "category_sale":
+
+            await MControlState.edit_meal.set()
+
+            await call.message.edit_text(
+                f"Редактируем {edit_data} блюда. Введите новое значение",
+                reply_markup=menu_control.quit_anything
+            )
+        elif call.data == "meal_sale":
+            category = await db.select_category(category_id=category_id)
+            if category[-2]:
+                await call.answer(
+                    "Для категории включена скидка. "
+                    "Установить скидку отдельно для каждого из блюд в этой "
+                    "категории теперь нельзя.\n"
+                    "Чтобы это стало доступным - отключите скидку "
+                    "для всей категории, выставив ее значение = 0",
+                    show_alert=True
+                )
+                return
+
             edit_data = "скидку"
             await state.update_data(edit=call.data)
 
-        await MControlState.edit_category.set()
+            await MControlState.edit_meal.set()
 
-        await call.message.edit_text(
-            f"Редактируем {edit_data} категории. Введите новое значение",
-            reply_markup=menu_control.quit_anything
-        )
+            await call.message.edit_text(
+                f"Редактируем {edit_data} блюда. Введите новое значение",
+                reply_markup=menu_control.quit_anything
+            )
 
 
 # quit editing
-@dp.callback_query_handler(text='quit_anything', state=MControlState.edit_category)
-async def quit_managing_category(call: types.CallbackQuery, state: FSMContext):
+@dp.callback_query_handler(text='quit_anything', state=MControlState.edit_meal)
+async def quit_managing_meal(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    category = await db.select_category(category_id=int(data.get('category_id')))
+
+    meal_id = data.get('meal_id')
 
     name = data.get('name')
     description = data.get('description')
-    category_id = data.get('category_id')
-    category_sale = data.get('category_sale')
-    category_sale_percent = data.get('category_sale_percent')
 
-    await MControlState.manage_menu.set()
+    price = data.get('price')
+    meal_sale = data.get('meal_sale')
+    meal_sale_percent = data.get('meal_sale_percent')
+
+    included = data.get('included')
+
+    await MControlState.manage_menu_meal.set()
     await call.message.edit_text(
-                ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category_id}\n"
-                f"<b>Имя</b>: {name}\n"
-                f"<b>Описание</b>: {description}\n"
-                f"<b>Скидка</b>: {category_sale}\n") + \
-                (f"<b>Величина скидки</b>: {category_sale_percent}%" if category_sale else ""),
+                "<b>Подтвердите удаление блюда!</b>\n\n" + \
+                (f"<b>ID:</b> {meal_id}\n"
+                f"<b>Есть в меню:</b> {included}\n"
+                f"<b>Имя:</b> {name}\n") + \
+                f"<b>Цена:</b> {price}\n" +\
+                (f"<b>Описание:</b> {description}\n") + \
+                (f"<b>Категория:</b> {category[1]}\n" if category else "<b>Категория:</b> Была удалена\n") + \
+                (f"<b>Скидка:</b> {meal_sale}\n") + \
+                (f"<b>Величина скидки</b>: {meal_sale_percent}%" if meal_sale else ""),
                 reply_markup=types.InlineKeyboardMarkup(
                     row_width=1,
                     inline_keyboard=[
@@ -415,7 +522,13 @@ async def quit_managing_category(call: types.CallbackQuery, state: FSMContext):
                         [
                             types.InlineKeyboardButton(
                                 text="Скидка",
-                                callback_data='category_sale'
+                                callback_data='meal_sale'
+                            )
+                        ],
+                        [
+                            types.InlineKeyboardButton(
+                                text="Включено в меню",
+                                callback_data='included'
                             )
                         ]
                     ]
@@ -433,26 +546,25 @@ async def quit_managing_category(call: types.CallbackQuery, state: FSMContext):
 
 
 # continue editing
-@dp.message_handler(state=MControlState.edit_category)
+@dp.message_handler(state=MControlState.edit_meal)
 async def await_data_manage(message: types.Message, state: FSMContext):    
     data = await state.get_data()
     edit = data.get('edit')
-    category_sale = data.get('category_sale')
-    
+
     if edit == "name":
         await state.update_data(name=message.text)
     elif edit == "description":
         await state.update_data(description=message.text)
-    elif edit == "category_sale":
+    elif edit == "meal_sale":
         try:
             percent = int(message.text)
             if percent in range(0, 100):
                 if percent != 0:
-                    await state.update_data(category_sale=True)
-                    await state.update_data(category_sale_percent=percent)
+                    await state.update_data(meal_sale=True)
+                    await state.update_data(meal_sale_percent=percent)
                 else:
-                    await state.update_data(category_sale=False)
-                    await state.update_data(category_sale_percent=None)
+                    await state.update_data(meal_sale=False)
+                    await state.update_data(meal_sale_percent=0)
             else:
                 await message.reply("В допустимых значениях!")
                 return
@@ -460,34 +572,42 @@ async def await_data_manage(message: types.Message, state: FSMContext):
                 await message.reply("% скидки это числовое значение!")
                 return
 
-    await MControlState.confirm_category.set()
+    await MControlState.confirm_meal.set()
     await message.reply(
         "Запомнил. Продолжаем?",
         reply_markup=menu_control.continue_or_save
     )
 
 
-@dp.callback_query_handler(state=MControlState.confirm_category)
+@dp.callback_query_handler(state=MControlState.confirm_meal)
 async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    category = await db.select_category(category_id=int(data.get('category_id')))
 
+    meal_id = data.get('meal_id')
     category_id = data.get('category_id')
     
     name = data.get('name')
     description = data.get('description')
     
-    category_sale = data.get('category_sale')
-    category_sale_percent = data.get('category_sale_percent')
+    price = data.get('price')
+    meal_sale = data.get('meal_sale')
+    meal_sale_percent = data.get('meal_sale_percent')
+
+    included = data.get('included')
 
     if call.data == "continue":
-        await MControlState.manage_menu.set()
+        await MControlState.manage_menu_meal.set()
         await call.message.edit_text(
-                ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category_id}\n"
-                f"<b>Имя</b>: {name}\n"
-                f"<b>Описание</b>: {description}\n"
-                f"<b>Скидка</b>: {category_sale}\n") + \
-                (f"<b>Величина скидки</b>: {category_sale_percent}%" if category_sale else ""),
+                "<b>Подтвердите удаление блюда!</b>\n\n" + \
+                (f"<b>ID:</b> {meal_id}\n"
+                f"<b>Есть в меню:</b> {included}\n"
+                f"<b>Имя:</b> {name}\n") + \
+                f"<b>Цена:</b> {price}\n" +\
+                (f"<b>Описание:</b> {description}\n") + \
+                (f"<b>Категория:</b> {category[1]}\n" if category else "<b>Категория:</b> Была удалена\n") + \
+                (f"<b>Скидка:</b> {meal_sale}\n") + \
+                (f"<b>Величина скидки</b>: {meal_sale_percent}%" if meal_sale else ""),
                 reply_markup=types.InlineKeyboardMarkup(
                     row_width=1,
                     inline_keyboard=[
@@ -506,7 +626,13 @@ async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
                         [
                             types.InlineKeyboardButton(
                                 text="Скидка",
-                                callback_data='category_sale'
+                                callback_data='meal_sale'
+                            )
+                        ],
+                        [
+                            types.InlineKeyboardButton(
+                                text="Включено в меню",
+                                callback_data='included'
                             )
                         ]
                     ]
@@ -522,39 +648,49 @@ async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
                 )
             )
     else:
-        await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
+        await db.update_meal_data(int(category_id), name, description, price, meal_sale, int(meal_sale_percent), included, int(meal_id))
 
         await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=None)
         await state.finish()
         await back_to_menu(call)
 
 
-@dp.callback_query_handler(state=MControlState.confirm_category)
-async def confirm_category(call: types.CallbackQuery, state=FSMContext):
+@dp.callback_query_handler(state=MControlState.confirm_meal)
+async def confirm_meal(call: types.CallbackQuery, state=FSMContext):
     data = await state.get_data()
+    category = await db.select_category(category_id=int(data.get('category_id')))
 
+    meal_id = data.get('meal_id')
+    category_id = data.get('category_id')
+    
     name = data.get('name')
     description = data.get('description')
-    category_id = data.get('category_id')
-    category_sale = data.get('category_sale')
-    category_sale_percent = data.get('category_sale_percent')
+    
+    price = data.get('price')
+    meal_sale = data.get('meal_sale')
+    meal_sale_percent = data.get('meal_sale_percent')
+
+    included = data.get('included')
 
     if call.data == "accept":
 
-        await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
+        await db.update_meal_data(int(category_id), name, description, meal_sale, int(meal_sale_percent), included, int(meal_id))
 
         await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=None)
         await state.finish()
         await back_to_menu(call)
     else:
-        await MControlState.manage_menu.set()
+        await MControlState.manage_menu_meal.set()
         await call.message.edit_text(
-            ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category_id}\n"
-                f"<b>Имя</b>: {name}\n"
-                f"<b>Описание</b>: {description}\n"
-                f"<b>Скидка</b>: {category_sale}\n") + \
-                (f"<b>Величина скидки</b>: {category_sale_percent}%" if category_sale else ""),
+            "<b>Подтвердите удаление блюда!</b>\n\n" + \
+                (f"<b>ID:</b> {meal_id}\n"
+                f"<b>Есть в меню:</b> {included}\n"
+                f"<b>Имя:</b> {name}\n") + \
+                f"<b>Цена:</b> {price}\n" +\
+                (f"<b>Описание:</b> {description}\n") + \
+                (f"<b>Категория:</b> {category[1]}\n" if category else "<b>Категория:</b> Была удалена\n") + \
+                (f"<b>Скидка:</b> {meal_sale}\n") + \
+                (f"<b>Величина скидки</b>: {meal_sale_percent}%" if meal_sale else ""),
             reply_markup=types.InlineKeyboardMarkup(
                 row_width=1,
                 inline_keyboard=[
@@ -573,7 +709,13 @@ async def confirm_category(call: types.CallbackQuery, state=FSMContext):
                     [
                         types.InlineKeyboardButton(
                             text="Скидка",
-                            callback_data='category_sale'
+                            callback_data='meal_sale'
+                        )
+                    ],
+                    [
+                        types.InlineKeyboardButton(
+                            text="Включено в меню",
+                            callback_data='included'
                         )
                     ]
                 ]
