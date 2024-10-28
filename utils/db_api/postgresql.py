@@ -200,27 +200,28 @@ class Database:
             CREATE TABLE IF NOT EXISTS meals (
             meal_id SERIAL PRIMARY KEY,
             
-            category VARCHAR(100) NOT NULL,
+            category_id BIGINT DEFAULT NULL,
             
             name VARCHAR(100) NOT NULL,
             description TEXT NULL,
             
             price DECIMAL NOT NULL,
-            included BOOLEAN DEFAULT TRUE,
-            
             sale BOOLEAN DEFAULT FALSE,
+            sale_percent SMALLINT,
             
-            sale_price DECIMAL NULL,
-            sale_percent SMALLINT
+            included BOOLEAN DEFAULT TRUE
             );
             """, execute=True)
 
-    async def add_meal(self, name, category, description, price):
-        sql = "INSERT INTO categories (name, category, description, price) VALUES($1, $2, $3, $4) returning *"
-        return await self.execute(sql, name, category, description, price, fetchrow=True)
-    
-    async def delete_meal(self, category_id):
-        return await self.execute("DELETE FROM categories WHERE category_id = $1", category_id, execute=True)
+    async def add_meal(self, category_id, name, description, price):
+        sql = "INSERT INTO meals (category_id, name, description, price) VALUES($1, $2, $3, $4) returning *"
+        return await self.execute(sql, category_id, name, description, price, fetchrow=True)
+
+    async def delete_meal(self, meal_id):
+        return await self.execute("DELETE FROM meals WHERE meal_id = $1", meal_id, execute=True)
+
+    async def cascade_deleting(self, category_id):
+        return await self.execute("DELETE FROM meals where category_id = $1", category_id, execute=True)
 
     async def list_meals(self):
         sql = "SELECT * FROM meals"
@@ -230,4 +231,3 @@ class Database:
         sql = "SELECT * FROM meals WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
-    

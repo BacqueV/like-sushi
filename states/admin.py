@@ -18,7 +18,9 @@ class MControlState(StatesGroup):
 
     # await ID
     await_id_delete = State()
+    await_id_delete_meal = State()
     await_id_manage = State()
+    await_id_manage_meal = State()
     await_id_meal = State()
 
     # await NAME

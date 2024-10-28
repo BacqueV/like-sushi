@@ -11,28 +11,22 @@ async def get_all_users(message: types.Message):
         telegram_id = []
         name = []
         username = []
-        
         for user in users:
             telegram_id.append(user[3])
             name.append(user[1])
             username.append(user[2])
-        
         data = {
             "Telegram ID": telegram_id,
             "Name": name,
             "Username": username
         }
-        
         pd.options.display.max_rows = 10000
         df = pd.DataFrame(data)
-
-        chunk_size = 50
-        if len(df) > chunk_size:
-            for x in range(0, len(df), chunk_size):
-                await bot.send_message(message.chat.id, df[x:x + chunk_size].to_string(index=False))
+        if len(df) > 50:
+            for x in range(0, len(df), 50):
+                await bot.send_message(message.chat.id, df[x:x + 50])
         else:
-            await bot.send_message(message.chat.id, df.to_string(index=False))
-
+            await bot.send_message(message.chat.id, df)
 
 
 @dp.message_handler(commands='profile')

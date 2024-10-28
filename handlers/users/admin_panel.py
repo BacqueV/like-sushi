@@ -37,20 +37,26 @@ async def get_all_users(message: types.Message):
         users = await db.admin_list()
         telegram_id = []
         name = []
+
         for user in users:
             telegram_id.append(user[-2])
             name.append(user[1])
+
         data = {
             "Telegram ID": telegram_id,
             "Name": name
         }
+
         pd.options.display.max_rows = 10000
         df = pd.DataFrame(data)
-        if len(df) > 50:
-            for x in range(0, len(df), 50):
-                await bot.send_message(message.chat.id, df[x:x + 50])
+
+        chunk_size = 50
+        if len(df) > chunk_size:
+            for x in range(0, len(df), chunk_size):
+                await bot.send_message(message.chat.id, df[x:x + chunk_size].to_string(index=False))
         else:
-            await bot.send_message(message.chat.id, df)
+            await bot.send_message(message.chat.id, df.to_string(index=False))
+
 
 
 @dp.message_handler(commands='passwd')

@@ -58,7 +58,7 @@ async def list_categories(call: types.CallbackQuery):
     pd.options.display.max_rows = 10000
     df = pd.DataFrame(data)
 
-    await call.message.edit_text("<i>Открываем список категорий</i>", reply_markup=types.InlineKeyboardMarkup())
+    await call.message.edit_text("<i>Открываем список категорий</i>", reply_markup=None)
 
     chunk_size = 50
     if len(df) > chunk_size:
@@ -77,7 +77,7 @@ async def quit_menu(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await call.message.edit_text(
         text="<i>Вы вышли из интерфейса управления меню!</i>",
-        reply_markup=types.InlineKeyboardMarkup()
+        reply_markup=None
     )
 
 """
@@ -95,7 +95,7 @@ async def add_category(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text='quit_anything', state=MControlState.await_name_category)
 async def no_category(call: types.CallbackQuery):
-    await call.message.edit_text("<i>Вы отменили добавление категории</i>", reply_markup=types.InlineKeyboardMarkup())
+    await call.message.edit_text("<i>Вы отменили добавление категории</i>", reply_markup=None)
     await MControlState.main_menu.set()
     await asyncio.sleep(1)
     await call.message.answer(
@@ -122,7 +122,7 @@ async def no_category_description(call: types.CallbackQuery, state: FSMContext):
 
     await call.message.edit_text(
         "<i>Описание не потребовалось</i>",
-        reply_markup=types.InlineKeyboardMarkup()
+        reply_markup=None
     )
     
     await MControlState.confirmation_add_category.set()
@@ -140,7 +140,8 @@ async def save_description_category(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
     await MControlState.confirmation_add_category.set()
     await message.answer(
-        f"<b>Сохраняем?</b>\n\n" f"Имя: {name}\n" f"Описание: {message.text}",
+        f"<b>Сохраняем?</b>\n\n" f"Имя: {name}\n"
+        f"Описание: {message.text}",
         reply_markup=menu_control.confirmation
     )
 
@@ -155,7 +156,7 @@ async def category_add_confirmation(call: types.CallbackQuery, state: FSMContext
         
         await call.message.edit_text(
             "<i>Вы добавили новую категорию блюд</i>",
-            reply_markup=types.InlineKeyboardMarkup()
+            reply_markup=None
         )
         await notify_admins(
             f"Добавлена новая категория - <b>{name} ({description})</b>"
@@ -163,7 +164,7 @@ async def category_add_confirmation(call: types.CallbackQuery, state: FSMContext
     else:
         await call.message.edit_text(
             "<i>Вы отменили добавление новой категории</i>",
-            reply_markup=types.InlineKeyboardMarkup()
+            reply_markup=None
         )
     await back_to_menu(call)
 
@@ -205,8 +206,7 @@ async def await_id_delete(message: types.Message, state: FSMContext):
             await message.reply(
                 "<b>Подтвердите удаление категории!</b>\n"
                 "<b>Все блюда принадлежащие этой категории будут удалены!</b>\n\n" + \
-                ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category[0]}\n"
+                (f"<b>ID</b>: {category[0]}\n"
                 f"<b>Имя</b>: {category[1]}\n"
                 f"<b>Описание</b>: {category[2]}\n"
                 f"<b>Скидка</b>: {category[3]}\n") + \
@@ -228,14 +228,17 @@ async def category_delete_confirmation(call: types.CallbackQuery, state: FSMCont
         category_name = category[1]
 
         await db.delete_category(category_id)
+        await db.cascade_deleting(category_id)
         await call.message.edit_text(
             f"Категория [{category_name}] и все блюда принадлежащие ей были удалены!",
-            reply_markup=types.InlineKeyboardMarkup()
+            reply_markup=None
         )
 
         await notify_admins(
             f"Категория <b>{category_name}</b> и все блюда принадлежащие ей были удалены!"
         )    
+    else:
+        await call.message.edit_text("<i>Вы отменили удаление категории!</i>")
     await back_to_menu(call)
 
 """
@@ -244,6 +247,11 @@ Manage category
 
 @dp.callback_query_handler(text='manage_category', state=MControlState.main_menu)
 async def manage_category(call: types.CallbackQuery):
+    categories = await db.list_categories()
+    if len(categories) == 0:
+        await call.answer("Нет категорий для правки!", show_alert=False)
+        return
+
     await MControlState.await_id_manage.set()
     await call.message.edit_text(
         "Введите <b>ID</b> категории для правки\n\n"
@@ -341,7 +349,7 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
             await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
         await call.message.edit_text(
             "<i>Данные для категории сохранены!</i>",
-            reply_markup=types.InlineKeyboardMarkup()
+            reply_markup=None
         )
         await state.finish()
         await back_to_menu(call)
@@ -349,7 +357,7 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
     elif call.data == "back":
         await call.message.edit_text(
             "<i>Отменяем правки в категориях!</i>",
-            reply_markup=types.InlineKeyboardMarkup()
+            reply_markup=None
         )
         await back_to_menu(call)
 
@@ -518,7 +526,7 @@ async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
     else:
         await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
 
-        await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=types.InlineKeyboardMarkup())
+        await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=None)
         await state.finish()
         await back_to_menu(call)
 
@@ -537,7 +545,7 @@ async def confirm_category(call: types.CallbackQuery, state=FSMContext):
 
         await db.update_category_data(name, description, category_sale, category_sale_percent, category_id)
 
-        await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=types.InlineKeyboardMarkup())
+        await call.message.edit_text(f"<i>Вы обновили категорию {name}!</i>", reply_markup=None)
         await state.finish()
         await back_to_menu(call)
     else:

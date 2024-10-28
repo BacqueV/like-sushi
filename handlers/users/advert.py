@@ -19,7 +19,7 @@ async def wait_msg(message: types.Message):
 @dp.callback_query_handler(text='quit_anything', state=BroadcastingState.wait_msg)
 async def quit_advertising(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
-    await call.message.edit_text("<i>Вы отменили рекламную рассылку!</i>", reply_markup=types.InlineKeyboardMarkup())
+    await call.message.edit_text("<i>Вы отменили рекламную рассылку!</i>", reply_markup=None)
 
 @dp.message_handler(state=BroadcastingState.wait_msg, content_types=types.ContentType.ANY)
 async def get_message(message: types.Message, state: FSMContext):
