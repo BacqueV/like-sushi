@@ -5,7 +5,7 @@ from loader import dp, db, bot
 from aiogram.dispatcher import FSMContext
 from keyboards.inline import menu_control
 from states.admin import MControlState
-from handlers.users.admin_panel import notify_admins
+from handlers.users.admin.panel import notify_admins
 
 
 async def back_to_menu(call: types.CallbackQuery):
@@ -203,7 +203,7 @@ async def await_id_delete_meal(message: types.Message, state: FSMContext):
             await message.reply(
                 "<b>Подтвердите удаление блюда!</b>\n\n" + \
                 (f"<b>ID:</b> {meal[0]}\n"
-                f"<b>Есть в меню:</b> {meal[-1]}\n"
+                f"<b>Есть в наличии:</b> {meal[-1]}\n"
                 f"<b>Имя:</b> {meal[2]}\n") + \
                 f"<b>Цена:</b> {meal[4]}\n" +\
                 (f"<b>Описание:</b> {meal[3]}\n") + \
@@ -291,7 +291,7 @@ async def await_id_manage_meal(message: types.Message, state: FSMContext):
             await message.reply(
                 "<b>Подтвердите удаление блюда!</b>\n\n" + \
                 (f"<b>ID:</b> {meal[0]}\n"
-                f"<b>Есть в меню:</b> {meal[-1]}\n"
+                f"<b>Есть в наличии:</b> {meal[-1]}\n"
                 f"<b>Имя:</b> {meal[2]}\n") + \
                 f"<b>Цена:</b> {meal[4]}\n" +\
                 (f"<b>Описание:</b> {meal[3]}\n") + \
@@ -321,7 +321,7 @@ async def await_id_manage_meal(message: types.Message, state: FSMContext):
                         ],
                         [
                             types.InlineKeyboardButton(
-                                text="Включено в меню",
+                                text="В наличии",
                                 callback_data='included'
                             )
                         ]
@@ -388,6 +388,7 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
 
             included = meal[-1]
             new_state = not included
+            await state.update_data(included=new_state)
 
             await db.update_included(new_state, meal_id)
             meal_new = await db.select_meal(meal_id=meal_id)
@@ -396,7 +397,7 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
             await call.message.edit_text(
                         "<b>Подтвердите удаление блюда!</b>\n\n" + \
                         (f"<b>ID:</b> {meal_id}\n"
-                        f"<b>Есть в меню:</b> {meal_new[-1]}\n"
+                        f"<b>Есть в наличии:</b> {meal_new[-1]}\n"
                         f"<b>Имя:</b> {name}\n") + \
                         f"<b>Цена:</b> {price}\n" +\
                         (f"<b>Описание:</b> {description}\n") + \
@@ -426,7 +427,7 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
                                 ],
                                 [
                                     types.InlineKeyboardButton(
-                                        text="Включено в меню",
+                                        text="В наличии",
                                         callback_data='included'
                                     )
                                 ]
@@ -497,7 +498,7 @@ async def quit_managing_meal(call: types.CallbackQuery, state: FSMContext):
     await call.message.edit_text(
                 "<b>Подтвердите удаление блюда!</b>\n\n" + \
                 (f"<b>ID:</b> {meal_id}\n"
-                f"<b>Есть в меню:</b> {included}\n"
+                f"<b>Есть в наличии:</b> {included}\n"
                 f"<b>Имя:</b> {name}\n") + \
                 f"<b>Цена:</b> {price}\n" +\
                 (f"<b>Описание:</b> {description}\n") + \
@@ -527,7 +528,7 @@ async def quit_managing_meal(call: types.CallbackQuery, state: FSMContext):
                         ],
                         [
                             types.InlineKeyboardButton(
-                                text="Включено в меню",
+                                text="В наличии",
                                 callback_data='included'
                             )
                         ]
@@ -601,7 +602,7 @@ async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
         await call.message.edit_text(
                 "<b>Подтвердите удаление блюда!</b>\n\n" + \
                 (f"<b>ID:</b> {meal_id}\n"
-                f"<b>Есть в меню:</b> {included}\n"
+                f"<b>Есть в наличии:</b> {included}\n"
                 f"<b>Имя:</b> {name}\n") + \
                 f"<b>Цена:</b> {price}\n" +\
                 (f"<b>Описание:</b> {description}\n") + \
@@ -631,7 +632,7 @@ async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
                         ],
                         [
                             types.InlineKeyboardButton(
-                                text="Включено в меню",
+                                text="В наличии",
                                 callback_data='included'
                             )
                         ]
@@ -684,7 +685,7 @@ async def confirm_meal(call: types.CallbackQuery, state=FSMContext):
         await call.message.edit_text(
             "<b>Подтвердите удаление блюда!</b>\n\n" + \
                 (f"<b>ID:</b> {meal_id}\n"
-                f"<b>Есть в меню:</b> {included}\n"
+                f"<b>Есть в наличии:</b> {included}\n"
                 f"<b>Имя:</b> {name}\n") + \
                 f"<b>Цена:</b> {price}\n" +\
                 (f"<b>Описание:</b> {description}\n") + \
@@ -714,7 +715,7 @@ async def confirm_meal(call: types.CallbackQuery, state=FSMContext):
                     ],
                     [
                         types.InlineKeyboardButton(
-                            text="Включено в меню",
+                            text="В наличии",
                             callback_data='included'
                         )
                     ]

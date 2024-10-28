@@ -6,7 +6,7 @@ from loader import dp, db, bot
 from aiogram.dispatcher import FSMContext
 from keyboards.inline import menu_control
 from states.admin import MControlState
-from handlers.users.admin_panel import notify_admins
+from handlers.users.admin.panel import notify_admins
 
 
 async def back_to_menu(call: types.CallbackQuery):

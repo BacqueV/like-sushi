@@ -157,7 +157,7 @@ class Database:
         return await self.execute(sql, fetch=True)
 
     """
-    Control meal categories
+    Control categories
     """
 
     async def create_table_categories(self):
@@ -194,6 +194,10 @@ class Database:
         sql = "UPDATE categories SET name=$1, description=$2, sale=$3, sale_percent=$4 WHERE category_id=$5"
         return await self.execute(sql, name, description, sale, sale_percent, category_id, execute=True)
 
+    """
+    Control meals
+    """
+
     async def create_table_meals(self):
         await self.execute(
             """
@@ -226,6 +230,10 @@ class Database:
     async def list_meals(self):
         sql = "SELECT * FROM meals"
         return await self.execute(sql, fetch=True)
+    
+    async def open_category(self, category_id):
+        sql = "SELECT * FROM meals WHERE category_id=$1"
+        return await self.execute(sql, category_id, fetch=True)
 
     async def update_meal_data(self, category_id, name, description, price, sale, sale_percent, included, meal_id):
         sql = "UPDATE meals SET category_id=$1, name=$2, description=$3, price=$4, sale=$5, sale_percent=$6, included=$7 WHERE meal_id=$8"
