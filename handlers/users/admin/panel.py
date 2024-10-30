@@ -39,7 +39,7 @@ async def get_all_users(message: types.Message):
         name = []
 
         for user in users:
-            telegram_id.append(user[-2])
+            telegram_id.append(user[3])
             name.append(user[1])
 
         data = {

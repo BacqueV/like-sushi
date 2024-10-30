@@ -51,12 +51,24 @@ class Database:
         full_name VARCHAR(255) NOT NULL,
         username VARCHAR(255) NULL,
         telegram_id BIGINT NOT NULL UNIQUE,
-        is_admin BOOLEAN DEFAULT FALSE NOT NULL
+        is_admin BOOLEAN DEFAULT FALSE NOT NULL,
+        is_manager BOOLEAN DEFAULT FALSE,
+        language VARCHAR(50) DEFAULT 'ru',
+        phone_number VARCHAR(20)
         );
         """
         await self.execute(sql, execute=True)
 
-    # then create table with phone number and saved locations for every user + language settings
+    async def create_table_locations (self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS locations (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        lattitude DOUBLE PRECISION,
+        longitude DOUBLE PRECISION
+        );
+        """
+        return await self.execute(sql, execute=True)
 
     @staticmethod
     def format_args(sql, parameters: dict):
@@ -231,8 +243,12 @@ class Database:
         sql = "SELECT * FROM meals"
         return await self.execute(sql, fetch=True)
     
+    async def select_onsale_ones(self, category_id):
+        sql = "SELECT name FROM meals WHERE sale=true AND category_id=$1"
+        return await self.execute(sql, category_id, fetch=True)
+    
     async def open_category(self, category_id):
-        sql = "SELECT * FROM meals WHERE category_id=$1"
+        sql = "SELECT * FROM meals WHERE category_id=$1 AND included=true"
         return await self.execute(sql, category_id, fetch=True)
 
     async def update_meal_data(self, category_id, name, description, price, sale, sale_percent, included, meal_id):
@@ -247,3 +263,43 @@ class Database:
         sql = "SELECT * FROM meals WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
+
+    """
+    Basket
+    """
+
+    async def create_table_basket(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS basket (
+        id SERIAL PRIMARY KEY,
+        telegram_id BIGINT NOT NULL,
+        meal_id INTEGER NOT NULL,
+        real_price INTEGER NOT NULL,
+        discount SMALLINT DEFAULT 0,
+        amount SMALLINT DEFAULT 1,
+        price INTEGER NOT NULL,
+        total_cost INTEGER NOT NULL,
+        info VARCHAR(100)
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def add_meal_into_basket(
+            self, telegram_id, meal_id, real_price, amount, price, total_cost, info, discount
+        ):
+        sql = "INSERT INTO basket " + \
+        "(telegram_id, meal_id, real_price, amount, price, total_cost, info, discount) " + \
+        "VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+        
+        return await self.execute(
+            sql, telegram_id, meal_id, real_price, amount, price, total_cost, info, discount,
+            execute=True
+        )
+
+    async def clean_busket(self, telegram_id):
+        sql = "DELETE * FROM basket WHERE telegram_id=$1"
+        return await self.execute(sql, telegram_id, execute=True)
+
+    async def delete_meal_from_busket(self, meal_id):
+        sql = "DELETE * FROM busket WHERE meal_id=$1"
+        return await self.execute(sql, meal_id, execute=True)

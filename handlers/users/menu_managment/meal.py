@@ -195,9 +195,10 @@ async def quit_deleting(call: types.CallbackQuery):
 async def await_id_delete_meal(message: types.Message, state: FSMContext):
     try:
         meal = await db.select_meal(meal_id=int(message.text))
-        category = await db.select_category(category_id=meal[1])
         
         if meal:
+            category = await db.select_category(category_id=meal[1])
+    
             await state.update_data(meal_id=int(message.text))
             await MControlState.confirmation_delete_meal.set()
             await message.reply(
@@ -213,9 +214,9 @@ async def await_id_delete_meal(message: types.Message, state: FSMContext):
                 reply_markup=menu_control.confirmation
             )
         else:
-             await message.reply("Такого блюда нет!")
+             await message.reply("Такого блюда нет!", reply_markup=menu_control.quit_anything)
     except ValueError:
-        await message.reply("<b>ID</b> хранится в числовых значениях!")
+        await message.reply("<b>ID</b> хранится в числовых значениях!", reply_markup=menu_control.quit_anything)
 
 
 @dp.callback_query_handler(state=MControlState.confirmation_delete_meal)
@@ -338,9 +339,9 @@ async def await_id_manage_meal(message: types.Message, state: FSMContext):
                 )
             )
         else:
-             await message.reply("Такого блюда нет!")
+             await message.reply("Такого блюда нет!", reply_markup=menu_control.quit_anything)
     except ValueError:
-        await message.reply("<b>ID</b> хранится в числовых значениях!")
+        await message.reply("<b>ID</b> хранится в числовых значениях!", reply_markup=menu_control.quit_anything)
 
 
 # editing

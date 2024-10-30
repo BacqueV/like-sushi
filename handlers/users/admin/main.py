@@ -39,7 +39,10 @@ async def get_user_profile(message: types.Message):
 
                 user = await db.select_user(telegram_id=int(user_data))
                 if user:
-                    await message.reply(f"Ссылка на профиль пользователя: <a href='tg://user?id={user_data}'>{user[1]}</a>")
+                    await message.reply(
+                        f"<a href='tg://user?id={user_data}'>Ссылка</a> на "
+                        f"профиль пользователя: <a href='tg://user?id={user_data}'>{user[1]}</a>"
+                    )
                 else:
                     await message.reply("Такого пользователя нет в Базе данных!")
 

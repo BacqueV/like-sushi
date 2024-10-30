@@ -16,6 +16,7 @@ async def start(dispatcher):
     await db.create_passwd_table()
     await db.create_table_categories()
     await db.create_table_meals()
+    await db.create_table_basket()
     await set_default_commands(dispatcher)
     config.admins = await config.get_adminlist()
     await on_startup_notify(dispatcher)

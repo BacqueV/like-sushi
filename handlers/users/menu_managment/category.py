@@ -214,9 +214,9 @@ async def await_id_delete(message: types.Message, state: FSMContext):
                 reply_markup=menu_control.confirmation
             )
         else:
-             await message.reply("Такой категории нет!")
+             await message.reply("Такой категории нет!", reply_markup=menu_control.quit_anything)
     except ValueError:
-        await message.reply("<b>ID</b> хранится в числовых значениях!")
+        await message.reply("<b>ID</b> хранится в числовых значениях!", reply_markup=menu_control.quit_anything)
 
 
 @dp.callback_query_handler(state=MControlState.confirmation_delete_category)
@@ -327,24 +327,24 @@ async def await_id_manage(message: types.Message, state: FSMContext):
                 )
             )
         else:
-             await message.reply("Такой категории нет!")
+             await message.reply("Такой категории нет!", reply_markup=menu_control.quit_anything)
     except ValueError:
-        await message.reply("<b>ID</b> хранится в числовых значениях!")
+        await message.reply("<b>ID</b> хранится в числовых значениях!", reply_markup=menu_control.quit_anything)
 
 
 # editing
 @dp.callback_query_handler(state=MControlState.manage_menu)
 async def save_or_not(call: types.CallbackQuery, state: FSMContext):
-    if call.data == "saveit":
-        data = await state.get_data()
-        category_id = data.get('category_id')
-        
-        name = data.get('name')
-        description = data.get('description')
-        
-        category_sale = data.get('category_sale')
-        category_sale_percent = data.get('category_sale_percent')
+    data = await state.get_data()
+    category_id = data.get('category_id')
+    
+    name = data.get('name')
+    description = data.get('description')
+    
+    category_sale = data.get('category_sale')
+    category_sale_percent = data.get('category_sale_percent')
 
+    if call.data == "saveit":
 
         await db.update_category_data(name, description, category_sale, int(category_sale_percent), int(category_id))
 
@@ -370,6 +370,20 @@ async def save_or_not(call: types.CallbackQuery, state: FSMContext):
             edit_data = "описание"
             await state.update_data(edit=call.data)
         elif call.data == "category_sale":
+            meals_onsale = await db.select_onsale_ones(category_id)
+
+            if meals_onsale:
+                meal_names = [meal['name'] for meal in meals_onsale]
+                
+                await call.answer(
+                    "Чтобы задать скидку для всей категории, "
+                    "уберите ее с отдельных блюд, а именно:\n\n"
+                    f"{', '.join(meal_names)}",
+                    show_alert=True
+                )
+                return
+
+
             edit_data = "скидку"
             await state.update_data(edit=call.data)
 

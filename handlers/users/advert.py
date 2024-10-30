@@ -118,7 +118,7 @@ async def decide_confirmation(call: types.CallbackQuery, state: FSMContext):
         await db.clean_broadcasting_table()  # pre-check
         await db.fill_broadcasting_table()  # in
         
-        count = await broadcaster(bot, chat_id, message_id, btn_txt, btn_url)
+        count = await broadcaster(bot, chat_id, message_id, btn_txt, btn_url)  # broadcasting
         await call.message.answer(
             f"Успешно разослали сообщение [{count}] пользователям!\n\n"
             "<b>Рассылка окончена!</b>"
