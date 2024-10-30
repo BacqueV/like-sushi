@@ -2,10 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 async def list_categories(categories: list) -> InlineKeyboardMarkup:
-    btn_basket = InlineKeyboardButton(text='Корзина 🧺', callback_data='open_basket')
-    
     categories_kb = InlineKeyboardMarkup(row_width=2)
-    categories_kb.add(btn_basket)
 
     for category in categories:
         categories_kb.insert(
@@ -15,6 +12,8 @@ async def list_categories(categories: list) -> InlineKeyboardMarkup:
             )
         )
 
+    btn_basket = InlineKeyboardButton(text='Корзина 🧺', callback_data='open_basket')
+    categories_kb.row(btn_basket)
     categories_kb.add(
         InlineKeyboardButton(
             text='Покинуть меню',
@@ -25,11 +24,7 @@ async def list_categories(categories: list) -> InlineKeyboardMarkup:
 
 
 async def list_meals(meals: list) -> InlineKeyboardMarkup:
-    btn_basket = InlineKeyboardButton(text='Корзина 🧺', callback_data='open_basket')
-    
     meals_kb = InlineKeyboardMarkup(row_width=2)
-    meals_kb.add(btn_basket)
-    
 
     for meal in meals:
         meals_kb.insert(
@@ -39,6 +34,8 @@ async def list_meals(meals: list) -> InlineKeyboardMarkup:
             )
         )
 
+    btn_basket = InlineKeyboardButton(text='Корзина 🧺', callback_data='open_basket')
+    meals_kb.row(btn_basket)
     meals_kb.add(
         InlineKeyboardButton(
             text='Назад',

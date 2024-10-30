@@ -296,6 +296,30 @@ class Database:
             execute=True
         )
 
+    async def orders_meals(self, telegram_id):
+        sql = """
+        SELECT 
+            meal_id,
+            SUM(total_cost) AS total_cost_sum,
+            SUM(amount) AS amount_sum,
+            real_price,
+            info
+        FROM 
+            basket
+        WHERE 
+            telegram_id = $1
+        GROUP BY 
+            meal_id, real_price, info
+        ORDER BY 
+            meal_id;
+
+        """
+        return await self.execute(sql, telegram_id, fetch=True)
+
+    async def open_basket(self, telegram_id):
+        sql = "SELECT * FROM basket WHERE telegram_id=$1"
+        return await self.execute(sql, telegram_id, fetch=True)
+
     async def clean_busket(self, telegram_id):
         sql = "DELETE * FROM basket WHERE telegram_id=$1"
         return await self.execute(sql, telegram_id, execute=True)

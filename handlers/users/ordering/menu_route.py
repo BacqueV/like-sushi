@@ -9,10 +9,11 @@ from . import go_back
 
 @dp.callback_query_handler(state=OrderingState.choose_category)
 async def open_category(call: types.CallbackQuery, state: FSMContext):
-    meals = await db.open_category(int(call.data))
+    category_id = int(call.data)
+    meals = await db.open_category(category_id)
 
-    category = await db.select_category(category_id=int(call.data))
-    await state.update_data(category_id=int(call.data))
+    category = await db.select_category(category_id=category_id)
+    await state.update_data(category_id=category_id)
 
     if len(meals) == 0:
         await call.message.edit_text(
@@ -154,7 +155,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
         data = await state.get_data()
         total_cost = data.get('total_cost')
         await db.add_meal_into_basket(
-            call.message.from_user.id, meal_id, real_price,
+            call.from_user.id, meal_id, real_price,
             amount, price, total_cost, info, discount
         )
         await call.answer("Добавлено!")

@@ -1,5 +1,5 @@
 from aiogram import types
-from loader import dp, db, bot
+from loader import dp, db
 from aiogram.dispatcher import FSMContext
 from keyboards.inline import ordering
 from states.ordering import OrderingState

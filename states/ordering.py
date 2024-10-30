@@ -8,3 +8,6 @@ class OrderingState(StatesGroup):
     choose_meal = State()
 
     meal_menu = State()
+    basket = State()
+
+    order = State()
