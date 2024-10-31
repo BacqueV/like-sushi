@@ -12,3 +12,6 @@ class OrderingState(StatesGroup):
 
     pre_check = State()
     order = State()
+
+class OrderProcessingState(StatesGroup):
+    processing = State()

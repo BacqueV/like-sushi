@@ -25,7 +25,7 @@ async def bot_start(message: types.Message):
         f"<a href='tg://user?id={user[-2]}'>{user[1]}</a>, @{user[2]}\n\n" + \
         f"<b>Общее количество пользователей - {count}</b>"
 
-        admins = await db.list_admins()
+        admins = await db.admin_id_list()
 
         for admin in admins:
             try:

@@ -3,15 +3,17 @@ from loader import dp, db, bot
 import pandas as pd
 import logging
 from filters.is_admin import IsAdminFilter
+import asyncio
 
 
 async def notify_admins(notify_message):
-    admins = await db.list_admins()
+    admins = await db.admin_id_list()
     for admin in admins:
         try:
             await dp.bot.send_message(admin, f"<i>Уведомление для администрации!</i>\n\n" + notify_message)
         except Exception as err:
             logging.exception(err)
+        await asyncio.sleep(.05)
 
 
 @dp.message_handler(IsAdminFilter(is_admin=True), text="/adminhelp")

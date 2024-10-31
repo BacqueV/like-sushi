@@ -11,7 +11,7 @@ async def quit_choosing_category(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await call.message.edit_text(
         "<i>Вы прекратили просмотр меню</i>",
-        reply_markup=main_menu.kb
+        reply_markup=None
     )
 
 

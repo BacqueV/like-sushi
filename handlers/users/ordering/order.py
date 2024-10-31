@@ -1,10 +1,12 @@
 from aiogram import types
-from loader import dp, db
+from loader import dp, db, bot
 from aiogram.dispatcher import FSMContext
-from keyboards.default import userdata
+from keyboards.default import userdata, main_menu
 from keyboards.inline import ordering
 from states.ordering import OrderingState
 import aiohttp
+import asyncio
+from datetime import datetime
 
 
 async def get_address_from_coordinates(latitude, longitude, fsm: FSMContext):
@@ -47,8 +49,9 @@ async def pre_check(message: types.Message, state: FSMContext):
     phone = data.get('phone')
 
     basket = await db.order_meals(telegram_id)
-    
-    response = f"<b>Проверьте заказ</b>:\n\n<b>Доставка:</b> 20000\n"
+
+    event_time = datetime.now().replace(second=0, microsecond=0)
+    response = f"<b>Проверьте заказ</b>:\n\n<b>Дата:</b> {event_time}\n<b>Доставка:</b> 20000\n"
     total_cost = 0
 
     for record in basket:
@@ -65,7 +68,7 @@ async def pre_check(message: types.Message, state: FSMContext):
 
     response += f'\n<b>Адрес доставки: </b>{address}\n<b>Номер телефона:</b> {phone}\n\n<b>Итого:</b> {int(total_cost) + 20000}'
 
-    await state.update_data(info=response)
+    await state.update_data(info=response[25:])
     await message.answer(response, reply_markup=ordering.order_kb)
 
 
@@ -155,7 +158,7 @@ async def find_location(message: types.Message, state: FSMContext):
 async def quit_location_managment(message: types.Message):
     data = await db.order_meals(message.from_user.id)
 
-    response = "<b>Корзина:</b>\n\n"
+    response = "<b>Корзина</b>\n\n"
     for row in data:
         meal = await db.select_meal(meal_id=row['meal_id'])
         name = meal[2]
@@ -213,11 +216,44 @@ async def order(call: types.CallbackQuery, state: FSMContext):
     telegram_id = data.get('telegram_id')
     
     order = await db.create_order(info, telegram_id)
-
-    print(order)
+    await state.update_data(order_id=order[0])
+    await db.clean_busket(telegram_id)
 
     managers = await db.manager_id_list()
 
     if managers:
-        for manager in managers:
+        await call.message.edit_text(
+            "<b>Заказ принят, ожидайте звонка нашего менеджера для подтверждения!</b>",
+            reply_markup=None
+        )
+        await asyncio.sleep(1)
+        await call.message.answer(
+            "Благодарим за ожидание ❤️",
+            reply_markup=main_menu.kb
+        )
+
+        process_order_kb = await ordering.enter_order_processing(order[0])
+
+        try:
+            for manager in managers:
+                await bot.send_message(
+                    chat_id=manager['telegram_id'],
+                    text="🤑 <b>Поступил новый заказ!</b>",
+                    reply_markup=process_order_kb
+                )
+                await asyncio.sleep(.05)
+        except Exception:
             pass
+    else:
+        admins = await db.admin_id_list()
+        try:
+            for admin in admins:
+                await bot.send_message(
+                    chat_id=admin,
+                    text="<b>В системе нет менеджеров. Клиенты не могут оформить заказ!</b>"
+                )
+                await asyncio.sleep(.05)
+        except Exception:
+            pass
+
+    await state.finish()

@@ -14,7 +14,7 @@ async def open_basket(call: types.CallbackQuery):
         await call.answer("Отмена заказа")
 
     if data:
-        response = "<b>Корзина:</b>\n\n"
+        response = "<b>Корзина</b>\n\n"
         for row in data:
             meal = await db.select_meal(meal_id=row['meal_id'])
             name = meal[2]
@@ -42,5 +42,5 @@ async def empty_basket(call: types.CallbackQuery, state: FSMContext):
     await call.message.edit_text(
         "Теперь вы можете заново заполнить эту корзину, "
         "нажав на 🛍 Заказать",
-        reply_markup=main_menu.kb
+        reply_markup=None
     )

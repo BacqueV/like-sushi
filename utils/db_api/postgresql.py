@@ -65,7 +65,7 @@ class Database:
         is_admin BOOLEAN DEFAULT FALSE NOT NULL,
         is_manager BOOLEAN DEFAULT FALSE,
         language VARCHAR(50) DEFAULT 'ru',
-        phone_number VARCHAR(20)
+        phone_number VARCHAR(50)
         );
         """
         await self.execute(sql, execute=True)
@@ -122,7 +122,7 @@ class Database:
 
     async def manager_id_list(self):
         sql = "SELECT telegram_id FROM users WHERE is_manager = true;"
-        return await self.execute(sql, fetchrow=True)
+        return await self.execute(sql, fetch=True)
 
     async def add_manager(self, telegram_id):
         sql = "UPDATE users SET is_manager = true WHERE telegram_id = $1;"
@@ -392,6 +392,7 @@ class Database:
         CREATE TABLE IF NOT EXISTS orders (
             order_id SERIAL PRIMARY KEY,
             info TEXT,
+            processing BOOLEAN DEFAULT FALSE,
             processed BOOLEAN DEFAULT FALSE,
             telegram_id BIGINT NOT NULL
         );"""
@@ -405,6 +406,15 @@ class Database:
         """
         return await self.execute(sql, info, telegram_id, fetchrow=True)
 
-    async def change_order_status(self, order_id):
-        sql = "UPDATE orders SET processed = NOT processed WHERE order_id=$1"
+    async def select_order(self, **kwargs):
+        sql = "SELECT * FROM orders WHERE "
+        sql, parameters = self.format_args(sql, parameters=kwargs)
+        return await self.execute(sql, *parameters, fetchrow=True)
+
+    async def change_processing(self, order_id):
+        sql = "UPDATE orders SET processing = NOT processing WHERE order_id=$1"
+        return await self.execute(sql, order_id)
+
+    async def set_processed(self, order_id):
+        sql = "UPDATE orders SET processed = true WHERE order_id=$1"
         return await self.execute(sql, order_id)
