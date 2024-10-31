@@ -12,7 +12,6 @@ async def start_processing(call: types.CallbackQuery, state: FSMContext):
     order_id = int(call.data)
     await state.update_data(order_id=order_id)
 
-    await db.change_processing(order_id)
     order = await db.select_order(order_id=order_id)
 
     if order[2]:
@@ -31,6 +30,7 @@ async def start_processing(call: types.CallbackQuery, state: FSMContext):
         )
     else:
         # precces the order
+        await db.change_processing(order_id)
         await call.message.edit_text(
             order[1],
             reply_markup=ordering.processing_kb
@@ -47,6 +47,7 @@ async def close_processing(call: types.CallbackQuery, state: FSMContext):
         "<i>Заказ обработан!</i>",
         reply_markup=None
     )
+    await state.finish()
 
 
 @dp.callback_query_handler(text='quit_processing', state=OrderProcessingState.processing)
