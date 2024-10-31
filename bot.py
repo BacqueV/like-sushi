@@ -1,8 +1,6 @@
 from aiogram import executor
 
 from loader import dp, db
-from data import config
-from utils.notify_admins import on_startup_notify
 from utils.set_bot_commands import set_default_commands
 
 # don't delete this unused imports, without them nothing will work
@@ -17,9 +15,10 @@ async def start(dispatcher):
     await db.create_table_categories()
     await db.create_table_meals()
     await db.create_table_basket()
+    await db.create_table_locations()
+    await db.create_table_orders()
+
     await set_default_commands(dispatcher)
-    config.admins = await config.get_adminlist()
-    await on_startup_notify(dispatcher)
 
 
 if __name__ == '__main__':

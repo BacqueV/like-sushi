@@ -14,7 +14,7 @@ async def quit_choosing_category(call: types.CallbackQuery, state: FSMContext):
     )
 
 
-@dp.callback_query_handler(text='quit', state=OrderingState.choose_meal)
+@dp.callback_query_handler(text='quit', state=[OrderingState.choose_meal, OrderingState.basket])
 async def quit_choosing_meal(call: types.CallbackQuery):
     categories = await db.list_categories()
     categories_kb = await ordering.list_categories(categories)

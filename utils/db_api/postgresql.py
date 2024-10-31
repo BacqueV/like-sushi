@@ -44,6 +44,17 @@ class Database:
                     result = await connection.execute(command, *args)
             return result
 
+    @staticmethod
+    def format_args(sql, parameters: dict):
+        sql += " AND ".join(
+            [f"{item} = ${num}" for num, item in enumerate(parameters.keys(), start=1)]
+        )
+        return sql, tuple(parameters.values())
+
+    """
+    Base
+    """
+
     async def create_table_users(self):
         sql = """
         CREATE TABLE IF NOT EXISTS users (
@@ -59,27 +70,53 @@ class Database:
         """
         await self.execute(sql, execute=True)
 
+    async def add_manager(self, telegram_id):
+        sql = "UPDATE users SET is_admin=true WHERE telegram_id=$1"
+        return await self.execute(sql, telegram_id, execute=True)
+
+    async def remove_manager(self, telegram_id):
+        sql = "UPDATE users SET is_admin=false WHERE telegram_id=$1"
+        return await self.execute(sql, telegram_id, execute=True)
+
+    async def list_admins(self):
+        sql = "SELECT telegram_id FROM users WHERE is_admin=true;"
+        return await self.execute(sql, fetch=True)
+
+    async def check_number(self, telegram_id):
+        sql = "SELECT phone_number FROM users WHERE telegram_id=$1"
+        return await self.execute(sql, telegram_id, fetchval=True)
+    
+    async def save_phone_number(self, telegram_id, phone_number, full_name):
+        sql = """
+        INSERT INTO users (telegram_id, phone_number, full_name) 
+        VALUES ($1, $2, $3) 
+        ON CONFLICT (telegram_id) DO UPDATE SET phone_number = $2, full_name = COALESCE($3, users.full_name)
+        """
+        return await self.execute(sql, telegram_id, phone_number, full_name, execute=True)
+
     async def create_table_locations (self):
         sql = """
         CREATE TABLE IF NOT EXISTS locations (
         id SERIAL PRIMARY KEY,
         telegram_id BIGINT NOT NULL,
+        address TEXT,
         lattitude DOUBLE PRECISION,
         longitude DOUBLE PRECISION
         );
         """
         return await self.execute(sql, execute=True)
-
-    @staticmethod
-    def format_args(sql, parameters: dict):
-        sql += " AND ".join(
-            [f"{item} = ${num}" for num, item in enumerate(parameters.keys(), start=1)]
-        )
-        return sql, tuple(parameters.values())
-
-    """
-    Base
-    """
+    
+    async def list_locations(self, telegram_id):
+        sql = "SELECT *  FROM locations WHERE telegram_id=$1"
+        return await self.execute(sql, telegram_id, fetch=True)
+    
+    async def check_locations(self, telegram_id):
+        sql = "SELECT COUNT(*) FROM locations WHERE telegram_id = $1"
+        return await self.execute(sql, telegram_id, fetchval=True)
+    
+    async def save_location(self, telegram_id, address, lattitude, longitude):
+        sql = "INSERT INTO locations (telegram_id, address, lattitude, longitude) VALUES($1, $2, $3, $4)"
+        return await self.execute(sql, telegram_id, address, lattitude, longitude, execute=True)
 
     async def add_user(self, full_name, username, telegram_id):
         sql = "INSERT INTO users (full_name, username, telegram_id) VALUES($1, $2, $3) returning *"
@@ -166,6 +203,10 @@ class Database:
 
     async def admin_list(self):
         sql = "SELECT * FROM users WHERE is_admin = TRUE;"
+        return await self.execute(sql, fetch=True)
+
+    async def manager_list(self):
+        sql = "SELECT * FROM users WHERE is_manager = TRUE;"
         return await self.execute(sql, fetch=True)
 
     """
@@ -296,7 +337,7 @@ class Database:
             execute=True
         )
 
-    async def orders_meals(self, telegram_id):
+    async def order_meals(self, telegram_id):
         sql = """
         SELECT 
             meal_id,
@@ -312,7 +353,6 @@ class Database:
             meal_id, real_price, info
         ORDER BY 
             meal_id;
-
         """
         return await self.execute(sql, telegram_id, fetch=True)
 
@@ -321,9 +361,31 @@ class Database:
         return await self.execute(sql, telegram_id, fetch=True)
 
     async def clean_busket(self, telegram_id):
-        sql = "DELETE * FROM basket WHERE telegram_id=$1"
+        sql = "DELETE FROM basket WHERE telegram_id=$1"
         return await self.execute(sql, telegram_id, execute=True)
 
     async def delete_meal_from_busket(self, meal_id):
         sql = "DELETE * FROM busket WHERE meal_id=$1"
         return await self.execute(sql, meal_id, execute=True)
+
+    """
+    Orders
+    """
+
+    async def create_table_orders(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS orders (
+            order_id SERIAL PRIMARY KEY,
+            info TEXT,
+            processed BOOLEAN DEFAULT FALSE,
+            telegram_id BIGINT NOT NULL
+        );"""
+        await self.execute(sql, execute=True)
+
+    async def add_order(self, info, telegram_id):
+        sql = "INSERT INTO orders (info, telegram_id) VALUES($1, $2)"
+        return await self.execute(sql, info, telegram_id, execute=True)
+
+    async def change_order_status(self, order_id):
+        sql = "UPDATE orders SET processed = NOT processed WHERE order_id=$1"
+        return await self.execute(sql, order_id)

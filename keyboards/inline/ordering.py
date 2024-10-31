@@ -16,7 +16,7 @@ async def list_categories(categories: list) -> InlineKeyboardMarkup:
     categories_kb.row(btn_basket)
     categories_kb.add(
         InlineKeyboardButton(
-            text='Покинуть меню',
+            text='Покинуть меню ⬅️',
             callback_data='quit'
         )
     )
@@ -38,7 +38,7 @@ async def list_meals(meals: list) -> InlineKeyboardMarkup:
     meals_kb.row(btn_basket)
     meals_kb.add(
         InlineKeyboardButton(
-            text='Назад',
+            text='Назад ⬅️',
             callback_data='quit'
         )
     )
@@ -51,7 +51,7 @@ async def meal_menu_markup(amount: int) -> InlineKeyboardMarkup:
     btn_increase = InlineKeyboardButton(text='➕', callback_data='increase')
 
     btn_basket = InlineKeyboardButton(text='Добавить в корзину 🧺', callback_data='basket')
-    btn_back = InlineKeyboardButton(text='Назад', callback_data='quit')
+    btn_back = InlineKeyboardButton(text='Назад ⬅️', callback_data='quit')
 
     meal_menu_kb = InlineKeyboardMarkup()
     meal_menu_kb.add(btn_decrease, btn_amount, btn_increase)
@@ -59,3 +59,18 @@ async def meal_menu_markup(amount: int) -> InlineKeyboardMarkup:
     meal_menu_kb.row(btn_back)
 
     return meal_menu_kb
+
+
+# basket buttons
+btn_order = InlineKeyboardButton(text='Заказать ⚡️', callback_data='pre_check')
+btn_empty = InlineKeyboardButton(text='Очистить корзину 🧹', callback_data='empty')
+btn_quit_meal_deal = InlineKeyboardButton(text='Назад ⬅️', callback_data='quit')
+
+basket_kb = InlineKeyboardMarkup().row(btn_order)
+basket_kb.add(btn_quit_meal_deal, btn_empty)
+
+# order check buttons
+btn_accept = InlineKeyboardButton(text='Подтвердить ✅', callback_data='accept')
+btn_deny = InlineKeyboardButton(text='Отменить ❌', callback_data='back')
+
+order_kb = InlineKeyboardMarkup(row_width=2).add(btn_accept, btn_deny)

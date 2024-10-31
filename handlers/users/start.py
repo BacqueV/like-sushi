@@ -1,8 +1,7 @@
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
 from loader import dp, db, bot
-from data import config
-from keyboards.default.main_menu import main_menu_kb
+from keyboards.default import main_menu
 from aiogram.utils.exceptions import BotBlocked
 
 
@@ -26,13 +25,15 @@ async def bot_start(message: types.Message):
         f"<a href='tg://user?id={user[-2]}'>{user[1]}</a>, @{user[2]}\n\n" + \
         f"<b>Общее количество пользователей - {count}</b>"
 
-        for admin in config.admins:
+        admins = await db.list_admins()
+
+        for admin in admins:
             try:
                 await bot.send_message(chat_id=admin, text=msg)
             except BotBlocked:
                 continue  # we don't need to know if some admin has blocked this bot
 
     try:
-        await message.answer(f"Добро пожаловать, {name}!", reply_markup=main_menu_kb)
+        await message.answer(f"Добро пожаловать, {name}!", reply_markup=main_menu.kb)
     except BotBlocked:
         pass

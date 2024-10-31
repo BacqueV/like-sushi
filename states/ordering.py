@@ -10,4 +10,5 @@ class OrderingState(StatesGroup):
     meal_menu = State()
     basket = State()
 
+    pre_check = State()
     order = State()

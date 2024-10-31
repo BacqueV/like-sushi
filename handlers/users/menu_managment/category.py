@@ -1,12 +1,12 @@
 import asyncio
 import pandas as pd
-from data import config
 from aiogram import types
 from loader import dp, db, bot
 from aiogram.dispatcher import FSMContext
 from keyboards.inline import menu_control
 from states.admin import MControlState
 from handlers.users.admin.panel import notify_admins
+from filters.is_admin import IsAdminFilter
 
 
 async def back_to_menu(call: types.CallbackQuery):
@@ -18,14 +18,13 @@ async def back_to_menu(call: types.CallbackQuery):
     )
 
 
-@dp.message_handler(text="/mcontrol")
+@dp.message_handler(IsAdminFilter(is_admin=True), text="/mcontrol")
 async def open_menu(message: types.Message):
-    if message.from_user.id in config.admins:
-        await MControlState.main_menu.set()
-        await message.answer(
-            "Вы открыли интерфейс управления меню",
-            reply_markup=menu_control.main_menu
-        )
+    await MControlState.main_menu.set()
+    await message.answer(
+        "Вы открыли интерфейс управления меню",
+        reply_markup=menu_control.main_menu
+    )
 
 
 @dp.callback_query_handler(text="list_categories", state=MControlState.main_menu)

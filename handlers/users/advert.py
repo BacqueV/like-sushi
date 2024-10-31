@@ -1,5 +1,4 @@
 from aiogram import types
-from data import config
 from loader import dp, db, bot
 from states.admin import BroadcastingState
 from aiogram.dispatcher import FSMContext
@@ -7,13 +6,13 @@ from keyboards.inline.advert import keyboard_builder
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from utils.broadcast import broadcaster
 from keyboards.inline.menu_control import quit_anything
+from filters.is_admin import IsAdminFilter
 
 
-@dp.message_handler(text='/advert')
+@dp.message_handler(IsAdminFilter(is_admin=True), text='/advert')
 async def wait_msg(message: types.Message):
-    if message.from_user.id in config.admins:
-        await message.answer("Приступаем к созданию рассылки!\n" + "<b>Отправь сообщение для рассылки</b>", reply_markup=quit_anything)
-        await BroadcastingState.wait_msg.set()
+    await message.answer("Приступаем к созданию рассылки!\n" + "<b>Отправь сообщение для рассылки</b>", reply_markup=quit_anything)
+    await BroadcastingState.wait_msg.set()
 
 
 @dp.callback_query_handler(text='quit_anything', state=BroadcastingState.wait_msg)
