@@ -39,7 +39,13 @@ async def get_address_from_coordinates(latitude, longitude, fsm: FSMContext):
             return None
 
 
-async def order(message: types.Message, state: FSMContext, telegram_id, address):
+async def pre_check(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    
+    telegram_id = data.get('telegram_id')
+    address = data.get('address')
+    phone = data.get('phone')
+
     basket = await db.order_meals(telegram_id)
     
     response = f"<b>Проверьте заказ</b>:\n\n<b>Доставка:</b> 20000\n"
@@ -57,21 +63,27 @@ async def order(message: types.Message, state: FSMContext, telegram_id, address)
     await state.update_data(total_cost=total_cost)
     await OrderingState.order.set()
 
-    response += f'\n<b>Адрес доставки: </b>{address}\n\n<b>Итого:</b> {int(total_cost) + 20000}'
+    response += f'\n<b>Адрес доставки: </b>{address}\n<b>Номер телефона:</b> {phone}\n\n<b>Итого:</b> {int(total_cost) + 20000}'
+
+    await state.update_data(info=response)
     await message.answer(response, reply_markup=ordering.order_kb)
 
 
+# START
 @dp.callback_query_handler(text='pre_check', state=OrderingState.basket)
-async def pre_check(call: types.CallbackQuery):
+async def check_order_info(call: types.CallbackQuery, state: FSMContext):
     await OrderingState.pre_check.set()
 
     telegram_id = call.from_user.id
     phone = await db.check_number(telegram_id)
 
+    await state.update_data(telegram_id=telegram_id)
+
 
     await call.message.edit_text('<i>Проверяем данные для доставки...</i>', reply_markup=None)
     
     if phone:
+        await state.update_data(phone=phone)
         locations = await db.check_locations(telegram_id)
 
         if locations == 0:
@@ -98,6 +110,7 @@ async def handle_phone_number(message: types.Message, state: FSMContext):
     await db.save_phone_number(telegram_id, phone_number, message.from_user.full_name)
     await state.update_data(phone_number=phone_number)
 
+    await state.update_data(phone=phone_number)
     await message.answer("<i>Ваш номер телефона сохранен</i>", reply_markup=types.ReplyKeyboardRemove())
 
     locations = await db.check_locations(telegram_id)
@@ -130,10 +143,12 @@ async def find_location(message: types.Message, state: FSMContext):
             reply_markup=userdata.manage_location_kb
         )
     else:
+        await state.update_data(address='Менеджер уточнит')
         await message.answer(
             "Не удалось определить адрес.\n" + \
             "С вами свяжется наш менеджер и запишет адрес сам"
         )
+        await pre_check(message, state)
 
 
 @dp.message_handler(text='⬅️ Назад', state=OrderingState.pre_check)
@@ -168,14 +183,41 @@ async def save_location(message: types.Message, state: FSMContext):
     # Сохранение геолокации в базе данных
     await db.save_location(message.from_user.id, address, latitude, longitude)
 
-    phone_number = await db.check_number(message.from_user.id)
+    await pre_check(message, state)
 
-    if not phone_number:
-        await message.answer("Нам нужно знать, как с вами связаться!", reply_markup=userdata.phone_keyboard)
-    else:
-        await message.answer(phone_number)
+
+@dp.message_handler(text='✅ Подтвердить', state=OrderingState.pre_check)
+async def confirm_location(message: types.Message, state: FSMContext):
+    await message.answer(
+        "<b>Последний шаг.</b>"
+        "\nОтправить заказ менеджеру?", reply_markup=types.ReplyKeyboardRemove()
+    )    
+    await pre_check(message, state)
 
 
 @dp.message_handler(state=OrderingState.pre_check)
 async def location_as_text(message: types.Message, state: FSMContext):
-    pass
+    await state.update_data(address=message.text)
+    await message.answer(
+        "<b>Последний шаг.</b>"
+        "\nОтправить заказ менеджеру?", reply_markup=types.ReplyKeyboardRemove()
+    )    
+    await pre_check(message, state)
+
+
+@dp.callback_query_handler(text='accept', state=OrderingState.order)
+async def order(call: types.CallbackQuery, state: FSMContext):
+
+    data = await state.get_data()
+    info = data.get('info')
+    telegram_id = data.get('telegram_id')
+    
+    order = await db.create_order(info, telegram_id)
+
+    print(order)
+
+    managers = await db.manager_id_list()
+
+    if managers:
+        for manager in managers:
+            pass

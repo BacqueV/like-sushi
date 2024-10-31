@@ -59,7 +59,7 @@ async def get_user_profile(message: types.Message):
 
 
 @dp.message_handler(IsAdminFilter(is_admin=True), text="/managerlist")
-async def get_admins(message: types.Message):
+async def get_managers(message: types.Message):
     users = await db.manager_list()
     telegram_id = []
     name = []

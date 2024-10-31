@@ -29,37 +29,37 @@ async def order(message: types.Message):
 
 
 @dp.message_handler(text=['✍️ Оставить отзыв'])
-async def order(message: types.Message):
+async def review(message: types.Message):
     await message.answer('Скоро!')
 
 
 @dp.message_handler(text=['🏠 Ближайший филиал'])
-async def order(message: types.Message):
+async def nearest_branch(message: types.Message):
     await message.answer('Скоро!')
 
 
 @dp.message_handler(text=['🎉 Акция'])
-async def order(message: types.Message):
+async def shares(message: types.Message):
     await message.answer('Скоро!')
 
 
 @dp.message_handler(text=['🏘 Филиалы'])
-async def order(message: types.Message):
+async def branches(message: types.Message):
     await message.answer('Скоро!')
 
 
 @dp.message_handler(text=['⚙️ Настройки'])
-async def order(message: types.Message):
+async def settings(message: types.Message):
     await message.answer('Скоро!')
 
 
 @dp.message_handler(text=['📋 Мои заказы'])
-async def order(message: types.Message):
+async def my_orders(message: types.Message):
     await message.answer('Скоро!')
 
 
 @dp.message_handler(text=['ℹ️ О нас'])
-async def order(message: types.Message):
+async def about_us(message: types.Message):
     await message.answer(
         '<b>Like Sushi</b> в Ташкенте — это сочетание свежих ингредиентов, авторских рецептов и японских традиций.\n\n'
         'Наши суши и роллы созданы с любовью к деталям, чтобы каждый кусочек приносил удовольствие.\n\n'

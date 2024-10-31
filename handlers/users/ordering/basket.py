@@ -10,6 +10,9 @@ from states.ordering import OrderingState
 async def open_basket(call: types.CallbackQuery):
     data = await db.order_meals(call.from_user.id)
 
+    if call.data == "back":
+        await call.answer("Отмена заказа")
+
     if data:
         response = "<b>Корзина:</b>\n\n"
         for row in data:

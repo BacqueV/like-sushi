@@ -2,6 +2,7 @@ from aiogram import types
 from loader import dp, db
 from aiogram.dispatcher import FSMContext
 from keyboards.inline import ordering
+from keyboards.default import main_menu
 from states.ordering import OrderingState
 
 
@@ -10,7 +11,7 @@ async def quit_choosing_category(call: types.CallbackQuery, state: FSMContext):
     await state.finish()
     await call.message.edit_text(
         "<i>Вы прекратили просмотр меню</i>",
-        reply_markup=None
+        reply_markup=main_menu.kb
     )
 
 
