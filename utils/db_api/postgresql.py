@@ -122,7 +122,7 @@ class Database:
 
     async def manager_id_list(self):
         sql = "SELECT telegram_id FROM users WHERE is_manager = true;"
-        return await self.execute(sql, fetch=True)
+        return await self.execute(sql, fetchrow=True)
 
     async def add_manager(self, telegram_id):
         sql = "UPDATE users SET is_manager = true WHERE telegram_id = $1;"
@@ -141,7 +141,7 @@ class Database:
 
     async def admin_id_list(self):
         sql = "SELECT telegram_id FROM users WHERE is_admin = true;"
-        return await self.execute(sql, fetch=True)
+        return await self.execute(sql, fetchrow=True)
 
     async def remove_admin(self, telegram_id):
         sql = "UPDATE users SET is_admin = false WHERE telegram_id=$1;"

@@ -7,6 +7,6 @@ async def on_startup_notify(dp: Dispatcher):
     if admins is not None:
         for admin in admins:
             try:
-                await dp.bot.send_message(admin['telegram_id'], "Бот запущен!")
-            except Exception:
-                pass  # cuz we don't need to know if some admin has blocked the bot
+                await dp.bot.send_message(admin, "Бот запущен!")
+            except Exception as err:
+                continue  # cuz we don't need to know if some admin has blocked the bot

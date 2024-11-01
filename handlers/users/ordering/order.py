@@ -238,7 +238,7 @@ async def order(call: types.CallbackQuery, state: FSMContext):
         try:
             for manager in managers:
                 await bot.send_message(
-                    chat_id=manager['telegram_id'],
+                    chat_id=manager,
                     text="🤑 <b>Поступил новый заказ!</b>",
                     reply_markup=process_order_kb
                 )
