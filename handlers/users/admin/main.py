@@ -127,7 +127,7 @@ async def list_orders(message: types.Message):
     is_admin = await IsAdminFilter(is_admin=True).check(message)
     is_manager = await IsManagerFilter(is_manager=True).check(message)
     
-    if not is_admin and is_manager or is_admin and not is_manager or is_admin and is_manager:
+    if is_admin or is_manager:
 
         orders = await db.list_all_orders()
 
@@ -165,7 +165,7 @@ async def list_orders(message: types.Message):
     is_admin = await IsAdminFilter(is_admin=True).check(message)
     is_manager = await IsManagerFilter(is_manager=True).check(message)
     
-    if not is_admin and is_manager or is_admin and not is_manager or is_admin and is_manager:
+    if is_admin or is_manager:
         try:
             order_id = int(message.get_args())
             order = await db.select_order(order_id=order_id)

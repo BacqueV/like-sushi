@@ -10,7 +10,7 @@ async def notify_admins(notify_message):
     admins = await db.admin_id_list()
     for admin in admins:
         try:
-            await dp.bot.send_message(admin, f"<i>Уведомление для администрации!</i>\n\n" + notify_message)
+            await dp.bot.send_message(admin['telegram_id'], f"<i>Уведомление для администрации!</i>\n\n" + notify_message)
         except Exception as err:
             logging.exception(err)
         await asyncio.sleep(.05)

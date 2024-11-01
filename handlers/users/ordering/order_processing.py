@@ -9,7 +9,11 @@ from states.ordering import OrderProcessingState
 async def start_processing(call: types.CallbackQuery, state: FSMContext):
     await OrderProcessingState.processing.set()
 
-    order_id = int(call.data)
+    try:
+        order_id = int(call.data)
+    except ValueError:
+        return
+
     await state.update_data(order_id=order_id)
 
     order = await db.select_order(order_id=order_id)

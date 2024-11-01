@@ -29,7 +29,7 @@ async def bot_start(message: types.Message):
 
         for admin in admins:
             try:
-                await bot.send_message(chat_id=admin, text=msg)
+                await bot.send_message(chat_id=admin['telegram_id'], text=msg)
             except BotBlocked:
                 continue  # we don't need to know if some admin has blocked this bot
 

@@ -221,6 +221,7 @@ async def order(call: types.CallbackQuery, state: FSMContext):
     await db.clean_basket(telegram_id)
 
     managers = await db.manager_id_list()
+    print(managers)
 
     if managers:
         await call.message.edit_text(
@@ -238,7 +239,7 @@ async def order(call: types.CallbackQuery, state: FSMContext):
         try:
             for manager in managers:
                 await bot.send_message(
-                    chat_id=manager,
+                    chat_id=manager['telegram_id'],
                     text="🤑 <b>Поступил новый заказ!</b>",
                     reply_markup=process_order_kb
                 )
@@ -250,7 +251,7 @@ async def order(call: types.CallbackQuery, state: FSMContext):
         try:
             for admin in admins:
                 await bot.send_message(
-                    chat_id=admin,
+                    chat_id=admin['telegram_id'],
                     text="<b>В системе нет менеджеров. Клиенты не могут оформить заказ!</b>"
                 )
                 await asyncio.sleep(.05)
