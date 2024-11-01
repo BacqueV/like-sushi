@@ -76,11 +76,10 @@ processing_kb = InlineKeyboardMarkup(row_width=1).add(btn_processed, btn_quit_pr
 
 # basket
 btn_order = InlineKeyboardButton(text='Заказать ⚡️', callback_data='pre_check')
-btn_empty = InlineKeyboardButton(text='Очистить корзину 🧹', callback_data='empty')
+btn_empty = InlineKeyboardButton(text='Очистить 🧹', callback_data='empty')
 btn_quit_meal_deal = InlineKeyboardButton(text='Назад ⬅️', callback_data='quit')
 
-basket_kb = InlineKeyboardMarkup().row(btn_order)
-basket_kb.add(btn_quit_meal_deal, btn_empty)
+pre_basket_kb = InlineKeyboardMarkup().row(btn_empty, btn_quit_meal_deal, btn_order)
 
 # order check
 btn_accept = InlineKeyboardButton(text='Подтвердить ✅', callback_data='accept')

@@ -14,22 +14,21 @@ async def start_processing(call: types.CallbackQuery, state: FSMContext):
 
     order = await db.select_order(order_id=order_id)
 
-    if order[2]:
-        # order has been processed
-        if order[3]:
+    if order[2]:  # is being processed
+        if order[3]:  # has been processed
             await call.message.edit_text(
-                '<i>Заказ обработан.</i> ✅',
+                '<i>Заказ уже обработан.</i>',
                 reply_markup=None
             )
-            return
-
-        # order is being processed
-        await call.message.edit_text(
-            "<i>Заказ обрабатывается другим менеджером.</i>",
-            reply_markup=None
-        )
+            await state.finish()
+        else:  # still being processed
+            await call.message.edit_text(
+                "<i>Заказ обрабатывается другим менеджером.</i>",
+                reply_markup=None
+            )
+            await state.finish()
     else:
-        # precces the order
+        # procces the order
         await db.change_processing(order_id)
         await call.message.edit_text(
             order[1],
@@ -44,7 +43,7 @@ async def close_processing(call: types.CallbackQuery, state: FSMContext):
 
     await db.set_processed(order_id)
     await call.message.edit_text(
-        "<i>Заказ обработан!</i>",
+        "<i>Заказ обработан вами!</i>",
         reply_markup=None
     )
     await state.finish()
@@ -57,6 +56,7 @@ async def quit_processing(call: types.CallbackQuery, state: FSMContext):
 
     await db.change_processing(order_id)
     await call.message.edit_text(
-        "<b>Вы отложили обработку заказа.</b>\nВернуться можете комадной /orders",  #TODO /orders command
+        "<b>Вы отложили обработку заказа.</b>\nВернуться можете комадной /orders",
         reply_markup=None
     )
+    await state.finish()

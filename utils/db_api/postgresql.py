@@ -375,12 +375,12 @@ class Database:
         sql = "SELECT * FROM basket WHERE telegram_id=$1"
         return await self.execute(sql, telegram_id, fetch=True)
 
-    async def clean_busket(self, telegram_id):
+    async def clean_basket(self, telegram_id):
         sql = "DELETE FROM basket WHERE telegram_id=$1"
         return await self.execute(sql, telegram_id, execute=True)
 
-    async def delete_meal_from_busket(self, meal_id):
-        sql = "DELETE * FROM busket WHERE meal_id=$1"
+    async def delete_meal_from_basket(self, meal_id):
+        sql = "DELETE * FROM basket WHERE meal_id=$1"
         return await self.execute(sql, meal_id, execute=True)
 
     """
@@ -394,17 +394,18 @@ class Database:
             info TEXT,
             processing BOOLEAN DEFAULT FALSE,
             processed BOOLEAN DEFAULT FALSE,
+            total_cost INTEGER NOT NULL,
             telegram_id BIGINT NOT NULL
         );"""
         await self.execute(sql, execute=True)
 
-    async def create_order(self, info, telegram_id):
+    async def create_order(self, info, total_cost, telegram_id):
         sql = """
-        INSERT INTO orders (info, telegram_id)
-        VALUES ($1, $2)
-        RETURNING order_id, info, processed, telegram_id
+        INSERT INTO orders (info, total_cost, telegram_id)
+        VALUES ($1, $2, $3)
+        RETURNING order_id, info, processed, total_cost, telegram_id
         """
-        return await self.execute(sql, info, telegram_id, fetchrow=True)
+        return await self.execute(sql, info, total_cost, telegram_id, fetchrow=True)
 
     async def select_order(self, **kwargs):
         sql = "SELECT * FROM orders WHERE "
@@ -413,8 +414,16 @@ class Database:
 
     async def change_processing(self, order_id):
         sql = "UPDATE orders SET processing = NOT processing WHERE order_id=$1"
-        return await self.execute(sql, order_id)
+        return await self.execute(sql, order_id, execute=True)
 
     async def set_processed(self, order_id):
         sql = "UPDATE orders SET processed = true WHERE order_id=$1"
-        return await self.execute(sql, order_id)
+        return await self.execute(sql, order_id, execute=True)
+
+    async def list_all_orders(self):
+        sql = "SELECT * FROM orders ORDER BY order_id"
+        return await self.execute(sql, fetch=True)
+    
+    async def list_user_orders(self, telegram_id):
+        sql = "SELECT * FROM orders WHERE telegram_id=$1 ORDER BY order_id"
+        return await self.execute(sql, telegram_id, fetch=True)

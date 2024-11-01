@@ -2,6 +2,8 @@ from aiogram import types
 from loader import dp, db, bot
 import pandas as pd
 from filters.is_admin import IsAdminFilter
+from filters.is_manager import IsManagerFilter
+import asyncio
 
 
 @dp.message_handler(IsAdminFilter(is_admin=True), text="/userlist")
@@ -118,3 +120,55 @@ async def remove_admin(message: types.Message):
             )
     else:
         await message.reply("Напииши телеграм id менеджера которого хочешь разжаловать с должности вместе с командой!")
+
+
+@dp.message_handler(commands='orders')
+async def list_orders(message: types.Message):
+    is_admin = await IsAdminFilter(is_admin=True).check(message)
+    is_manager = await IsManagerFilter(is_manager=True).check(message)
+    
+    if not is_admin and is_manager or is_admin and not is_manager or is_admin and is_manager:
+
+        orders = await db.list_all_orders()
+
+        if len(orders) == 0:
+            await message.reply("<b>Пока нет заказов!</b>")
+            return
+
+        response = '<b>Завершенные:</b>\n\n'
+        unprocessed_orders_kb = types.InlineKeyboardMarkup(row_width=1)
+
+        for order in orders:
+            if order[3]:  # has been processed
+                response += f"Заказ №{order[0]} — <b>[{order[-1]}]</b> {order[-2]}\n"
+            else:  # has not been processed yet
+                unprocessed_orders_kb.insert(
+                    types.InlineKeyboardButton(
+                        text=f"Заказ №{order[0]} — [{order[-1]}] {order[-2]}",
+                        callback_data=order[0]
+                    )
+                )
+
+        num_buttons = sum(len(row) for row in unprocessed_orders_kb.inline_keyboard)
+        
+        if num_buttons != 0:
+            response += "\n<b>Не завершенные:</b>"
+            await message.answer(response, reply_markup=unprocessed_orders_kb)
+        else:
+            await message.answer(response)
+            await asyncio.sleep(.5)
+            await message.answer("<b>Все заказы обработаны!</b>")
+
+
+@dp.message_handler(commands='order')
+async def list_orders(message: types.Message):
+    is_admin = await IsAdminFilter(is_admin=True).check(message)
+    is_manager = await IsManagerFilter(is_manager=True).check(message)
+    
+    if not is_admin and is_manager or is_admin and not is_manager or is_admin and is_manager:
+        try:
+            order_id = int(message.get_args())
+            order = await db.select_order(order_id=order_id)
+            await message.reply(order[1])
+        except (ValueError, TypeError):
+            await message.reply("Значение <b>ID</b> не существует, либо вы не знаете что оно хранится в числовых значениях 🤔")

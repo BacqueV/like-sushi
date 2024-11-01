@@ -213,11 +213,12 @@ async def order(call: types.CallbackQuery, state: FSMContext):
 
     data = await state.get_data()
     info = data.get('info')
+    total_cost = data.get('total_cost')
     telegram_id = data.get('telegram_id')
     
-    order = await db.create_order(info, telegram_id)
+    order = await db.create_order(info, (total_cost + 20000), telegram_id)
     await state.update_data(order_id=order[0])
-    await db.clean_busket(telegram_id)
+    await db.clean_basket(telegram_id)
 
     managers = await db.manager_id_list()
 
