@@ -15,7 +15,8 @@ btn_quit = KeyboardButton(text='⬅️ Назад')
 
 manage_location_kb = ReplyKeyboardMarkup(
     resize_keyboard=True,
-    row_width=2
+    row_width=2,
+    one_time_keyboard=True
 ).add(
     btn_accept, btn_quit, btn_save_location, btn_resend
 )
