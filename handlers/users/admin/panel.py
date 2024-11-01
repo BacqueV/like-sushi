@@ -21,6 +21,8 @@ async def get_all_users(message: types.Message):
     await message.answer(
         "/advert - Отправить рекламное сообщение\n\n"
         "/mcontrol - Открыть панель работы с позициями в меню\n\n"
+        "/orders - Выводит список всех заказов\n"
+        "/order - Выводит информацию по определенному заказу\n\n"
         "/userlist - Выводит список пользователей\n"
         "/adminlist - Выводит список администраторов\n"
         "/managerlist - Выводит список менеджеров\n\n"

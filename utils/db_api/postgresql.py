@@ -141,7 +141,7 @@ class Database:
 
     async def admin_id_list(self):
         sql = "SELECT telegram_id FROM users WHERE is_admin = true;"
-        return await self.execute(sql, fetchrow=True)
+        return await self.execute(sql, fetch=True)
 
     async def remove_admin(self, telegram_id):
         sql = "UPDATE users SET is_admin = false WHERE telegram_id=$1;"
