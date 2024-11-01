@@ -221,7 +221,6 @@ async def order(call: types.CallbackQuery, state: FSMContext):
     await db.clean_basket(telegram_id)
 
     managers = await db.manager_id_list()
-    print(managers)
 
     if managers:
         await call.message.edit_text(
