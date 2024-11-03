@@ -4,6 +4,7 @@ import pandas as pd
 from filters.is_admin import IsAdminFilter
 from filters.is_manager import IsManagerFilter
 import asyncio
+from aiogram.dispatcher import FSMContext
 
 
 @dp.message_handler(IsAdminFilter(is_admin=True), text="/userlist")
@@ -172,3 +173,9 @@ async def list_orders(message: types.Message):
             await message.reply(order[1])
         except (ValueError, TypeError):
             await message.reply("Значение <b>ID</b> не существует, либо вы не знаете что оно хранится в числовых значениях 🤔")
+
+
+@dp.message_handler(commands='clean', state='*')
+async def clean_state(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.reply("Вы прервали процесс!")
