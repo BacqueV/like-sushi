@@ -1,3 +1,3 @@
 from . import admin
-from . import orders
+from . import ordering
 from . import user_orders
