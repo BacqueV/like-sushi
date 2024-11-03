@@ -18,6 +18,7 @@ async def start(dispatcher):
     await db.create_table_basket()
     await db.create_table_locations()
     await db.create_table_orders()
+    await db.create_table_branches()
 
     await set_default_commands(dispatcher)
     await on_startup_notify(dispatcher)

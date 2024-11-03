@@ -1,6 +1,7 @@
 from aiogram import types
 from loader import dp, db, bot
 from keyboards.inline import ordering
+from states.user_orders import UserOrders
 from states.ordering import OrderingState
 
 
@@ -33,11 +34,6 @@ async def review(message: types.Message):
     await message.answer('Скоро!')
 
 
-@dp.message_handler(text=['🏠 Ближайший филиал'])
-async def nearest_branch(message: types.Message):
-    await message.answer('Скоро!')
-
-
 @dp.message_handler(text=['🎉 Акция'])
 async def shares(message: types.Message):
     await message.answer('Скоро!')
@@ -55,8 +51,78 @@ async def settings(message: types.Message):
 
 @dp.message_handler(text=['📋 Мои заказы'])
 async def my_orders(message: types.Message):
-    await message.answer('Скоро!')
+    telegram_id = message.from_user.id
+    orders = await db.list_user_orders(telegram_id)
+    
+    msg = '<b>Ваши заказы</b>'
+    orders_kb = types.InlineKeyboardMarkup(row_width=2)
 
+    for order in orders:
+        orders_kb.insert(
+            types.InlineKeyboardButton(
+                text=f"№{order[0]} - {order[-1]} сум",
+                callback_data=str(order[0])
+            )
+        )
+
+    btn_quit = types.InlineKeyboardButton(
+        text='Закрыть',
+        callback_data='quit'
+    )
+    orders_kb.row(btn_quit)
+
+    await message.answer(text=msg, reply_markup=orders_kb)
+    await UserOrders.list.set()
+
+
+@dp.callback_query_handler(text='quit', state=UserOrders.list)
+async def quit_order_menu(call: types.CallbackQuery):
+    await call.message.edit_text(
+        "<i>Вы завершили просмотр ваших заказов</i>",
+        reply_markup=None
+    )
+
+
+@dp.callback_query_handler(state=UserOrders.list)
+async def open_order(call: types.CallbackQuery):
+    order_id = int(call.data)
+    order = await db.select_order(order_id=order_id)
+
+    btn_quit = types.InlineKeyboardButton(
+        text='Назад ⬅️',
+        callback_data='quit'
+    )
+    order_kb = types.InlineKeyboardMarkup(row_width=2)
+    order_kb.row(btn_quit)
+
+    await call.message.edit_text(order[1], reply_markup=order_kb)
+    await UserOrders.certain_order.set()
+
+
+@dp.callback_query_handler(text='quit', state=UserOrders.certain_order)
+async def quit_order_menu(call: types.CallbackQuery):
+    telegram_id = call.from_user.id
+    orders = await db.list_user_orders(telegram_id)
+    
+    msg = '<b>Ваши заказы</b>'
+    orders_kb = types.InlineKeyboardMarkup(row_width=2)
+
+    for order in orders:
+        orders_kb.insert(
+            types.InlineKeyboardButton(
+                text=f"№{order[0]} - {order[-1]} сум",
+                callback_data=str(order[0])
+            )
+        )
+
+    btn_quit = types.InlineKeyboardButton(
+        text='Закрыть',
+        callback_data='quit'
+    )
+    orders_kb.row(btn_quit)
+
+    await call.message.edit_text(text=msg, reply_markup=orders_kb)
+    await UserOrders.list.set()
 
 @dp.message_handler(text=['ℹ️ О нас'])
 async def about_us(message: types.Message):

@@ -76,12 +76,12 @@ async def save_meals_category(call: types.CallbackQuery, state: FSMContext):
     await MControlState.await_description_meal.set()
     await call.message.reply(
         "Сохранил! Теперь введи описание, если требуется",
-        reply_markup=menu_control.quit_anything
+        reply_markup=menu_control.skip_kb
     )
 
 
 # continue without description
-@dp.callback_query_handler(text='quit_anything', state=MControlState.await_description_meal)
+@dp.callback_query_handler(text='skip', state=MControlState.await_description_meal)
 async def no_meal_description(call: types.CallbackQuery):
     await call.message.edit_text(
         "<i>Описание не потребовалось</i>",

@@ -109,12 +109,12 @@ async def save_name_category(message: types.Message, state: FSMContext):
     await MControlState.await_description_category.set()
     await message.reply(
         "Сохранил! Теперь введи описание, если требуется",
-        reply_markup=menu_control.quit_anything
+        reply_markup=menu_control.skip_kb
     )
 
 
 # continue without description
-@dp.callback_query_handler(text='quit_anything', state=MControlState.await_description_category)
+@dp.callback_query_handler(text='skip', state=MControlState.await_description_category)
 async def no_category_description(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     name = data.get('name')

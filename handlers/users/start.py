@@ -22,7 +22,7 @@ async def bot_start(message: types.Message):
         count = await db.count_users()
 
         msg = f"У нас новый пользователь!\n\n" + \
-        f"<a href='tg://user?id={user[-2]}'>{user[1]}</a>, @{user[2]}\n\n" + \
+        f"<a href='tg://user?id={user[3]}'>{user[1]}</a>, @{user[2]}\n\n" + \
         f"<b>Общее количество пользователей - {count}</b>"
 
         admins = await db.admin_id_list()

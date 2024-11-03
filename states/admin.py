@@ -50,3 +50,7 @@ class MControlState(StatesGroup):
     edit_meal = State()
     confirm_category = State()
     confirm_meal = State()
+
+
+class ManageLocationState(StatesGroup):
+    await_location = State()

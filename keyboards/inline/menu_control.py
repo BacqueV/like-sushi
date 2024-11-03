@@ -45,12 +45,12 @@ Continue or save
 """
 
 #  continue or save buttons
-btn_continue = InlineKeyboardButton(text='Продолжить', callback_data='continue')
-btn_save = InlineKeyboardButton(text='Сохранить', callback_data='save')
+btn_continue = InlineKeyboardButton(text='Сохранить и продолжить', callback_data='continue')
+btn_save = InlineKeyboardButton(text='Сохранить и выйти', callback_data='save')
 
 #  continue or save keyboard
-continue_or_save = InlineKeyboardMarkup()
-continue_or_save.row(btn_continue, btn_save)
+continue_or_save = InlineKeyboardMarkup(row_width=1)
+continue_or_save.add(btn_continue, btn_save)
 
 """
 Quit Anything
@@ -62,3 +62,10 @@ just_deny = InlineKeyboardButton(text='Отменить', callback_data='quit_an
 #  quit anything keyboard
 quit_anything = InlineKeyboardMarkup()
 quit_anything.row(just_deny)
+
+"""
+Skip
+"""
+
+skip = InlineKeyboardButton(text='Пропустить', callback_data='skip')
+skip_kb = InlineKeyboardMarkup().row(skip)

@@ -4,7 +4,10 @@ import pandas as pd
 from filters.is_admin import IsAdminFilter
 from filters.is_manager import IsManagerFilter
 import asyncio
+from states.admin import ManageLocationState
 from aiogram.dispatcher import FSMContext
+from handlers.users.ordering.order import get_address_from_coordinates
+from .panel import notify_admins
 
 
 @dp.message_handler(IsAdminFilter(is_admin=True), text="/userlist")
@@ -179,3 +182,70 @@ async def list_orders(message: types.Message):
 async def clean_state(message: types.Message, state: FSMContext):
     await state.finish()
     await message.reply("Вы прервали процесс!")
+
+
+@dp.message_handler(commands='branchlist')
+async def branchlist(message: types.Message):
+    branches = await db.branchlist()
+    branch_id = []
+    address = []
+
+    for branch in branches:
+        branch_id.append(branch[0])
+        address.append(branch[1])
+
+    data = {
+        "Branch ID": branch_id,
+        "Address": address
+    }
+
+    pd.options.display.max_rows = 10000
+    df = pd.DataFrame(data)
+
+    chunk_size = 50
+    if len(df) > chunk_size:
+        for x in range(0, len(df), chunk_size):
+            await bot.send_message(message.chat.id, df[x:x + chunk_size].to_string(index=False))
+    else:
+        await bot.send_message(message.chat.id, df.to_string(index=False))
+
+
+# add branch
+@dp.message_handler(IsAdminFilter(is_admin=True), text='/branchadd')
+async def start_location_saving(message: types.Message):
+    await ManageLocationState.await_location.set()
+    await message.answer("<b>Отправьте локацию филиала!</b>")
+
+
+@dp.message_handler(
+        IsAdminFilter(is_admin=True),
+        content_types=types.ContentType.LOCATION,
+        state=ManageLocationState.await_location
+    )
+async def save_location(message: types.Message, state: FSMContext):
+    latitude = message.location.latitude
+    longitude = message.location.longitude
+
+    address = await get_address_from_coordinates(latitude, longitude, state)
+
+    await notify_admins(f"Новый адрес: {address}")
+
+    await db.add_branch(address, latitude, longitude)
+    await state.finish()
+    await message.reply(
+        f"Адрес сохранен!\n<b>{address}</b>",
+    )
+
+
+# delete location
+@dp.message_handler(IsAdminFilter(is_admin=True), commands='branchdel')
+async def start_location_saving(message: types.Message):
+    try:
+        branch_id = int(message.get_args())
+
+        address = await db.get_branch_address(branch_id)
+        await db.delete_branch(branch_id)
+
+        await message.reply(f"Адрес филиала был удален!\n<b>{address}</b>")
+    except ValueError:
+        await message.reply("<b>ID</b> хранится в числовых значениях!")

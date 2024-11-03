@@ -425,5 +425,36 @@ class Database:
         return await self.execute(sql, fetch=True)
     
     async def list_user_orders(self, telegram_id):
-        sql = "SELECT * FROM orders WHERE telegram_id=$1 ORDER BY order_id"
+        sql = "SELECT order_id, info, total_cost FROM orders WHERE telegram_id=$1 ORDER BY order_id"
         return await self.execute(sql, telegram_id, fetch=True)
+
+    """
+    Branch locations
+    """
+
+    async def create_table_branches(self):
+        sql = """
+        CREATE TABLE IF NOT EXISTS branches (
+        id SERIAL PRIMARY KEY,
+        address TEXT,
+        latitude DOUBLE PRECISION,
+        longitude DOUBLE PRECISION
+        );
+        """
+        await self.execute(sql, execute=True)
+
+    async def branchlist(self):
+        sql = "SELECT * FROM branches;"
+        return await self.execute(sql, fetch=True)
+
+    async def add_branch(self, address, latitude, longitude):
+        sql = "INSERT INTO branches (address, latitude, longitude) VALUES ($1, $2, $3);"
+        return await self.execute(sql, address, latitude, longitude, execute=True)
+
+    async def delete_branch(self, branch_id):
+        sql = "DELETE FROM branches WHERE id=$1;"
+        return await self.execute(sql, branch_id, execute=True)
+
+    async def get_branch_address(self, branch_id):
+        sql = "SELECT address FROM branches WHERE id=$1"
+        return await self.execute(sql, branch_id, fetchval=True)

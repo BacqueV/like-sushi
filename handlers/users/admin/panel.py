@@ -26,11 +26,14 @@ async def get_all_users(message: types.Message):
         "/order - Выводит информацию по определенному заказу\n\n"
         "/userlist - Выводит список пользователей\n"
         "/adminlist - Выводит список администраторов\n"
-        "/managerlist - Выводит список менеджеров\n\n"
+        "/managerlist - Выводит список менеджеров\n"
+        "/branchlist - Выводит список всех филиалов\n\n"
         "/adminadd - Добавить админа ( Может добавлять, удалять еду из меню )\n"
-        "/manageradd - Добавить менеджера ( Может принимать заказы )\n\n"
+        "/manageradd - Добавить менеджера ( Может принимать заказы )\n"
+        "/branchadd - Добавить новый филиал (надо скинуть геолокацию после введения команды)\n\n"
         "/adminremove - Разжаловать админа с должности\n"
-        "/managerremove - Разжаловать менеджера с должности\n\n"
+        "/managerremove - Разжаловать менеджера с должности\n"
+        "/branchdel - Удалить филиал из базы данных"
         "/passwd - Задать пароль <b>самостоятельного</b> подключения к администраторскому доступу. ГОВОРИТЬ ЛИЧНО ТОЛЬКО СВОИМ В КОНФЕДЕНЦИАЛЬНЫХ ЧАТАХ, А ЛУЧШЕ ВЖИВУЮ!!!\n\n"
         "/imadmin - Самостоятельное получение администраторского доступа\n\n"
         "/profile - Введите <b>Telegram ID</b> или <b>Username</b> пользователя вместе с этой командой и получите его профиль, если позваляют найстройки конфеденциальности"
@@ -61,7 +64,6 @@ async def get_admins(message: types.Message):
             await bot.send_message(message.chat.id, df[x:x + chunk_size].to_string(index=False))
     else:
         await bot.send_message(message.chat.id, df.to_string(index=False))
-
 
 
 @dp.message_handler(commands='passwd')

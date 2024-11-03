@@ -66,7 +66,7 @@ async def pre_check(message: types.Message, state: FSMContext):
     await state.update_data(total_cost=total_cost)
     await OrderingState.order.set()
 
-    response += f'\n<b>Адрес доставки: </b>{address}\n<b>Номер телефона:</b> {phone}\n\n<b>Итого:</b> {int(total_cost) + 20000}'
+    response += f'\n<b>Адрес доставки: </b>{address}\n<b>Номер телефона:</b> <code>{phone}</code>\n\n<b>Итого:</b> {int(total_cost) + 20000}'
 
     await state.update_data(info=response[25:])
     await message.answer(response, reply_markup=ordering.order_kb)
