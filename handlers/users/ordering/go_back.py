@@ -40,7 +40,8 @@ async def quit_meal_deal(call: types.CallbackQuery, state: FSMContext):
 
     await state.finish()
     await OrderingState.choose_meal.set()
-    await call.message.edit_text(
+    await call.message.delete()
+    await call.message.answer(
         f"<b>{category[1]}</b>",
         reply_markup=meals_kb
     )

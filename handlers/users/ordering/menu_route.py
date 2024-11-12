@@ -73,6 +73,7 @@ async def open_meal(call: types.CallbackQuery, state: FSMContext):
             info = f"(Со скидкой в {category[-1]}% на единицу блюда)"
 
     await state.update_data(
+        photo=meal[-1],
         meal_id=int(call.data), category_id=meal[1], amount=1,
         price=price, real_price = meal[4], total_cost=price,
         discount_state=discount_state, discount=discount,
@@ -82,8 +83,10 @@ async def open_meal(call: types.CallbackQuery, state: FSMContext):
 
     meal_menu_kb = await ordering.meal_menu_markup(1)
 
-    await call.message.edit_text(
-        f"{1} x {meal[4]} = <b>{price}</b> {info}\n\n"
+    await call.message.delete()
+    await call.message.answer_photo(
+        photo=meal[-1],
+        caption=f"{1} x {meal[4]} = <b>{price}</b> {info}\n\n"
         f"<b>ID:</b> {meal[0]}\n"
         f"<b>Имя:</b> {meal[2]}\n"
         f"<b>Категория:</b> {category[1]}\n"
@@ -100,6 +103,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
     category = await db.select_category(category_id=data.get('category_id'))
+    photo = data.get('photo')
     meal_id = data.get('meal_id')
     real_price = data.get('real_price')
     amount = data.get('amount')
@@ -121,17 +125,25 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
             total_cost = (amount-1) * price
             await state.update_data(total_cost=total_cost)
 
-            await call.message.edit_text(
-                f"{amount-1} x {meal[4]} = <b>{total_cost}</b> {info}\n\n"
-                f"<b>ID:</b> {meal[0]}\n"
-                f"<b>Имя:</b> {meal[2]}\n"
-                f"<b>Категория:</b> {category[1]}\n"
-                f"<b>Цена:</b> {meal[4]}\n"
-                f"<b>Описание:</b> {meal[3]}\n" + \
-                (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
-                (f"<b>Величина скидки:</b> {discount}%" if discount_state else ""),
-                reply_markup=meal_menu_kb
-            )
+            msg = f"{amount-1} x {meal[4]} = <b>{total_cost}</b> {info}\n\n" + \
+            f"<b>ID:</b> {meal[0]}\n" + \
+            f"<b>Имя:</b> {meal[2]}\n" + \
+            f"<b>Категория:</b> {category[1]}\n" + \
+            f"<b>Цена:</b> {meal[4]}\n" + \
+            f"<b>Описание:</b> {meal[3]}\n" + \
+            (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
+            (f"<b>Величина скидки:</b> {discount}%" if discount_state else "")
+
+            if photo:
+                await call.message.edit_caption(
+                    caption=msg,
+                    reply_markup=meal_menu_kb
+                )
+            else:
+                await call.message.edit_text(
+                    msg, meal_menu_kb
+                )
+
     elif call.data == 'increase':
         await state.update_data(amount=amount+1)
 
@@ -140,17 +152,25 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
         total_cost = (amount+1) * price
         await state.update_data(total_cost=total_cost)
 
-        await call.message.edit_text(
-            f"{amount+1} x {meal[4]} = <b>{total_cost}</b> {info}\n\n"
-            f"<b>ID:</b> {meal[0]}\n"
-            f"<b>Имя:</b> {meal[2]}\n"
-            f"<b>Категория:</b> {category[1]}\n"
-            f"<b>Цена:</b> {meal[4]}\n"
-            f"<b>Описание:</b> {meal[3]}\n" + \
-            (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
-            (f"<b>Величина скидки:</b> {discount}%" if discount_state else ""),
-            reply_markup=meal_menu_kb
-        )
+        msg = f"{amount+1} x {meal[4]} = <b>{total_cost}</b> {info}\n\n" + \
+        f"<b>ID:</b> {meal[0]}\n" + \
+        f"<b>Имя:</b> {meal[2]}\n" + \
+        f"<b>Категория:</b> {category[1]}\n" + \
+        f"<b>Цена:</b> {meal[4]}\n" + \
+        f"<b>Описание:</b> {meal[3]}\n" + \
+        (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
+        (f"<b>Величина скидки:</b> {discount}%" if discount_state else "")
+
+        if photo:
+            await call.message.edit_caption(
+                caption=msg,
+                reply_markup=meal_menu_kb
+            )
+        else:
+            await call.message.edit_text(
+                msg, meal_menu_kb
+            )
+
     elif call.data == 'basket':
         data = await state.get_data()
         total_cost = data.get('total_cost')
