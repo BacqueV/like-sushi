@@ -51,7 +51,7 @@ async def pre_check(message: types.Message, state: FSMContext):
     basket = await db.order_meals(telegram_id)
 
     event_time = datetime.now().replace(second=0, microsecond=0)
-    response = f"<b>Проверьте заказ</b>:\n\n<b>Дата:</b> {event_time}\n<b>Доставка:</b> 20000\n"
+    response = f"<b>Проверьте заказ:</b>\n\n<b>Дата:</b> {event_time}\n<b>Доставка:</b> 20000\n"
     total_cost = 0
 
     for record in basket:

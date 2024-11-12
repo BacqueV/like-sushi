@@ -32,36 +32,25 @@ main_menu.row(quit_menu)
 Confirmation
 """
 
-#  confirmation buttons
 accept = InlineKeyboardButton(text='Подтвердить', callback_data='accept')
 deny = InlineKeyboardButton(text='Отменить', callback_data='deny')
 
-#  confirmation keyboard
-confirmation = InlineKeyboardMarkup()
-confirmation.row(accept, deny)
+confirmation = InlineKeyboardMarkup().row(accept, deny)
 
 """
 Continue or save
 """
 
-#  continue or save buttons
 btn_continue = InlineKeyboardButton(text='Сохранить и продолжить', callback_data='continue')
 btn_save = InlineKeyboardButton(text='Сохранить и выйти', callback_data='save')
-
-#  continue or save keyboard
-continue_or_save = InlineKeyboardMarkup(row_width=1)
-continue_or_save.add(btn_continue, btn_save)
+continue_or_save = InlineKeyboardMarkup(row_width=1).add(btn_continue, btn_save)
 
 """
 Quit Anything
 """
 
-#  quit anything buttons
 just_deny = InlineKeyboardButton(text='Отменить', callback_data='quit_anything')
-
-#  quit anything keyboard
-quit_anything = InlineKeyboardMarkup()
-quit_anything.row(just_deny)
+quit_anything = InlineKeyboardMarkup().row(just_deny)
 
 """
 Skip
@@ -69,3 +58,10 @@ Skip
 
 skip = InlineKeyboardButton(text='Пропустить', callback_data='skip')
 skip_kb = InlineKeyboardMarkup().row(skip)
+
+"""
+Image managing
+"""
+
+button_delete_image = InlineKeyboardButton(text='Удалить', callback_data='delete')
+image_control = InlineKeyboardMarkup(row_width=1).add(button_delete_image, just_deny)

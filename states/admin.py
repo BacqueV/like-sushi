@@ -35,6 +35,7 @@ class MControlState(StatesGroup):
     await_price = State()
     await_sale_price = State()  
     await_category = State()
+    await_image = State()
 
     # confirmation
     confirmation_add_category = State()

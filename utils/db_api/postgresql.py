@@ -288,7 +288,8 @@ class Database:
             sale BOOLEAN DEFAULT FALSE,
             sale_percent SMALLINT DEFAULT 0,
             
-            included BOOLEAN DEFAULT TRUE
+            included BOOLEAN DEFAULT TRUE,
+            image BYTEA
             );
             """, execute=True)
 
@@ -296,9 +297,9 @@ class Database:
         sql = "SELECT * FROM meals"
         return await self.execute(sql, fetch=True)
 
-    async def add_meal(self, category_id, name, description, price):
-        sql = "INSERT INTO meals (category_id, name, description, price) VALUES($1, $2, $3, $4) returning *"
-        return await self.execute(sql, category_id, name, description, price, fetchrow=True)
+    async def add_meal(self, category_id, name, description, price, image):
+        sql = "INSERT INTO meals (category_id, name, description, price, image) VALUES($1, $2, $3, $4, $5) returning *"
+        return await self.execute(sql, category_id, name, description, price, image, fetchrow=True)
 
     async def delete_meal(self, meal_id):
         return await self.execute("DELETE FROM meals WHERE meal_id = $1", meal_id, execute=True)
@@ -307,9 +308,9 @@ class Database:
         sql = "SELECT name FROM meals WHERE sale=true AND category_id=$1"
         return await self.execute(sql, category_id, fetch=True)
 
-    async def update_meal_data(self, category_id, name, description, price, sale, sale_percent, included, meal_id):
-        sql = "UPDATE meals SET category_id=$1, name=$2, description=$3, price=$4, sale=$5, sale_percent=$6, included=$7 WHERE meal_id=$8"
-        return await self.execute(sql, category_id, name, description, price, sale, sale_percent, included, meal_id, execute=True)
+    async def update_meal_data(self, category_id, name, description, price, sale, sale_percent, included, image, meal_id):
+        sql = "UPDATE meals SET category_id=$1, name=$2, description=$3, price=$4, sale=$5, sale_percent=$6, included=$7, image=$8 WHERE meal_id=$9"
+        return await self.execute(sql, category_id, name, description, price, sale, sale_percent, included, image, meal_id, execute=True)
 
     async def update_included(self, new_state, meal_id):
         sql = "UPDATE meals SET included=$1 WHERE meal_id=$2"
@@ -319,6 +320,10 @@ class Database:
         sql = "SELECT * FROM meals WHERE "
         sql, parameters = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, *parameters, fetchrow=True)
+    
+    async def delete_image(self, meal_id):
+        sql = "UPDATE meals SET image = NULL WHERE meal_id = $1;"
+        return await self.execute(sql, meal_id, execute=True)
 
     """
     Basket

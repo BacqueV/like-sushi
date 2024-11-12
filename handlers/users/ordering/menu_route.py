@@ -90,7 +90,7 @@ async def open_meal(call: types.CallbackQuery, state: FSMContext):
         f"<b>Цена:</b> {meal[4]}\n"
         f"<b>Описание:</b> {meal[3]}\n" + \
         (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
-        (f"<b>Величина скидки</b>: {discount}%" if discount_state else ""),
+        (f"<b>Величина скидки:</b> {discount}%" if discount_state else ""),
         reply_markup=meal_menu_kb
     )
 
@@ -129,7 +129,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
                 f"<b>Цена:</b> {meal[4]}\n"
                 f"<b>Описание:</b> {meal[3]}\n" + \
                 (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
-                (f"<b>Величина скидки</b>: {discount}%" if discount_state else ""),
+                (f"<b>Величина скидки:</b> {discount}%" if discount_state else ""),
                 reply_markup=meal_menu_kb
             )
     elif call.data == 'increase':
@@ -148,7 +148,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
             f"<b>Цена:</b> {meal[4]}\n"
             f"<b>Описание:</b> {meal[3]}\n" + \
             (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
-            (f"<b>Величина скидки</b>: {discount}%" if discount_state else ""),
+            (f"<b>Величина скидки:</b> {discount}%" if discount_state else ""),
             reply_markup=meal_menu_kb
         )
     elif call.data == 'basket':

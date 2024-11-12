@@ -126,7 +126,7 @@ async def no_category_description(call: types.CallbackQuery, state: FSMContext):
     
     await MControlState.confirmation_add_category.set()
     await call.message.answer(
-        f"<b>Сохраняем?</b>\n\n" f"Имя: {name}",
+        f"<b>Сохраняем?</b>\n\n" f"<b>Имя:</b> {name}",
         reply_markup=menu_control.confirmation
     )
 
@@ -139,7 +139,7 @@ async def save_description_category(message: types.Message, state: FSMContext):
     await state.update_data(description=message.text)
     await MControlState.confirmation_add_category.set()
     await message.answer(
-        f"<b>Сохраняем?</b>\n\n" f"Имя: {name}\n"
+        f"<b>Сохраняем?</b>\n\n" f"<b>Имя:</b> {name}\n"
         f"Описание: {message.text}",
         reply_markup=menu_control.confirmation
     )
@@ -205,11 +205,11 @@ async def await_id_delete(message: types.Message, state: FSMContext):
             await message.reply(
                 "<b>Подтвердите удаление категории!</b>\n"
                 "<b>Все блюда принадлежащие этой категории будут удалены!</b>\n\n" + \
-                (f"<b>ID</b>: {category[0]}\n"
-                f"<b>Имя</b>: {category[1]}\n"
-                f"<b>Описание</b>: {category[2]}\n"
-                f"<b>Скидка</b>: {category[3]}\n") + \
-                (f"<b>Величина скидки</b>: {category[4]}%" if category[3] else ""),
+                (f"<b>ID:</b> {category[0]}\n"
+                f"<b>Имя:</b> {category[1]}\n"
+                f"<b>Описание:</b> {category[2]}\n"
+                f"<b>Скидка:</b> {category[3]}\n") + \
+                (f"<b>Величина скидки:</b> {category[4]}%" if category[3] else ""),
                 reply_markup=menu_control.confirmation
             )
         else:
@@ -287,25 +287,23 @@ async def await_id_manage(message: types.Message, state: FSMContext):
 
             await message.reply(
                 ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category[0]}\n"
-                f"<b>Имя</b>: {category[1]}\n"
-                f"<b>Описание</b>: {category[2]}\n"
-                f"<b>Скидка</b>: {category[3]}\n") + \
-                (f"<b>Величина скидки</b>: {category[4]}%" if category[3] else ""),
+                f"<b>ID:</b> {category[0]}\n"
+                f"<b>Имя:</b> {category[1]}\n"
+                f"<b>Описание:</b> {category[2]}\n"
+                f"<b>Скидка:</b> {category[3]}\n") + \
+                (f"<b>Величина скидки:</b> {category[4]}%" if category[3] else ""),
                 reply_markup=types.InlineKeyboardMarkup(
-                    row_width=1,
+                    2,
                     inline_keyboard=[
                         [
                             types.InlineKeyboardButton(
                                 text="Имя",
                                 callback_data='name'
-                            )
-                        ],
-                        [
+                            ),
                             types.InlineKeyboardButton(
                                 text="Описание",
                                 callback_data='description'
-                            )
+                        )
                         ],
                         [
                             types.InlineKeyboardButton(
@@ -408,25 +406,23 @@ async def quit_managing_category(call: types.CallbackQuery, state: FSMContext):
     await MControlState.manage_menu.set()
     await call.message.edit_text(
                 ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category_id}\n"
-                f"<b>Имя</b>: {name}\n"
-                f"<b>Описание</b>: {description}\n"
-                f"<b>Скидка</b>: {category_sale}\n") + \
-                (f"<b>Величина скидки</b>: {category_sale_percent}%" if category_sale else ""),
+                f"<b>ID:</b> {category_id}\n"
+                f"<b>Имя:</b> {name}\n"
+                f"<b>Описание:</b> {description}\n"
+                f"<b>Скидка:</b> {category_sale}\n") + \
+                (f"<b>Величина скидки:</b> {category_sale_percent}%" if category_sale else ""),
                 reply_markup=types.InlineKeyboardMarkup(
-                    row_width=1,
+                    row_width=2,
                     inline_keyboard=[
                         [
                             types.InlineKeyboardButton(
                                 text="Имя",
                                 callback_data='name'
-                            )
-                        ],
-                        [
+                            ),
                             types.InlineKeyboardButton(
                                 text="Описание",
                                 callback_data='description'
-                            )
+                        )
                         ],
                         [
                             types.InlineKeyboardButton(
@@ -498,21 +494,19 @@ async def continue_or_save(call: types.CallbackQuery, state: FSMContext):
         await MControlState.manage_menu.set()
         await call.message.edit_text(
                 ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category_id}\n"
-                f"<b>Имя</b>: {name}\n"
-                f"<b>Описание</b>: {description}\n"
-                f"<b>Скидка</b>: {category_sale}\n") + \
-                (f"<b>Величина скидки</b>: {category_sale_percent}%" if category_sale else ""),
+                f"<b>ID:</b> {category_id}\n"
+                f"<b>Имя:</b> {name}\n"
+                f"<b>Описание:</b> {description}\n"
+                f"<b>Скидка:</b> {category_sale}\n") + \
+                (f"<b>Величина скидки:</b> {category_sale_percent}%" if category_sale else ""),
                 reply_markup=types.InlineKeyboardMarkup(
-                    row_width=1,
+                    row_width=2,
                     inline_keyboard=[
                         [
                             types.InlineKeyboardButton(
                                 text="Имя",
                                 callback_data='name'
-                            )
-                        ],
-                        [
+                            ),
                             types.InlineKeyboardButton(
                                 text="Описание",
                                 callback_data='description'
@@ -565,21 +559,19 @@ async def confirm_category(call: types.CallbackQuery, state=FSMContext):
         await MControlState.manage_menu.set()
         await call.message.edit_text(
             ("<b>Какие данные будем править?</b>\n\n"
-                f"<b>ID</b>: {category_id}\n"
-                f"<b>Имя</b>: {name}\n"
-                f"<b>Описание</b>: {description}\n"
-                f"<b>Скидка</b>: {category_sale}\n") + \
-                (f"<b>Величина скидки</b>: {category_sale_percent}%" if category_sale else ""),
+                f"<b>ID:</b> {category_id}\n"
+                f"<b>Имя:</b> {name}\n"
+                f"<b>Описание:</b> {description}\n"
+                f"<b>Скидка:</b> {category_sale}\n") + \
+                (f"<b>Величина скидки:</b> {category_sale_percent}%" if category_sale else ""),
             reply_markup=types.InlineKeyboardMarkup(
-                row_width=1,
+                row_width=2,
                 inline_keyboard=[
                     [
                         types.InlineKeyboardButton(
                             text="Имя",
                             callback_data='name'
-                        )
-                    ],
-                    [
+                        ),
                         types.InlineKeyboardButton(
                             text="Описание",
                             callback_data='description'
