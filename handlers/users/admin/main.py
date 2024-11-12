@@ -27,9 +27,9 @@ async def get_all_users(message: types.Message):
     }
     pd.options.display.max_rows = 10000
     df = pd.DataFrame(data)
-    if len(df) > 50:
-        for x in range(0, len(df), 50):
-            await bot.send_message(message.chat.id, df[x:x + 50])
+    if len(df) > 300:
+        for x in range(0, len(df), 300):
+            await bot.send_message(message.chat.id, df[x:x + 300])
     else:
         await bot.send_message(message.chat.id, df)
 
@@ -244,8 +244,10 @@ async def start_location_saving(message: types.Message):
         branch_id = int(message.get_args())
 
         address = await db.get_branch_address(branch_id)
-        await db.delete_branch(branch_id)
-
-        await message.reply(f"Адрес филиала был удален!\n<b>{address}</b>")
+        if address:
+            await db.delete_branch(branch_id)
+            await message.reply(f"Адрес филиала был удален!\n<b>{address}</b>")
+        else:
+            await message.reply("<b>Такого адреса нет в базе данных!</b>")
     except ValueError:
         await message.reply("<b>ID</b> хранится в числовых значениях!")

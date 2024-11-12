@@ -1,8 +1,9 @@
 from aiogram import types
-from loader import dp, db, bot
+from loader import dp, db
 from keyboards.inline import ordering
 from states.user_orders import UserOrders
 from states.ordering import OrderingState
+import asyncio
 
 
 @dp.message_handler(text=['🛍 Заказать'])
@@ -36,13 +37,22 @@ async def review(message: types.Message):
 
 @dp.message_handler(text=['🎉 Акция'])
 async def shares(message: types.Message):
-    await message.answer('Скоро!')
+    categories_onsale = await db.select_onsale_categories()
+    print(categories_onsale)
+    meals_onsale = await db.select_all_onsale_meals()
 
+    response = "<b>Категории блюд, в которых действуют скидки</b>\n\n"
+    for category in categories_onsale:
+        print(category['name'])
 
 @dp.message_handler(text=['🏘 Филиалы'])
 async def branches(message: types.Message):
-    await message.answer('Скоро!')
+    branches = await db.branchlist()
 
+    for branch in branches:
+        await message.answer(f"<b>№{branch[0]} - {branch[1]}</b>")
+        await message.answer_location(branch[2], branch[3])
+        await asyncio.sleep(.05)
 
 @dp.message_handler(text=['⚙️ Настройки'])
 async def settings(message: types.Message):
