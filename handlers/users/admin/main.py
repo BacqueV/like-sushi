@@ -178,7 +178,7 @@ async def list_orders(message: types.Message):
             await message.reply("Значение <b>ID</b> не существует, либо вы не знаете что оно хранится в числовых значениях 🤔")
 
 
-@dp.message_handler(commands='clean', state='*')
+@dp.message_handler(commands='reset', state='*')
 async def clean_state(message: types.Message, state: FSMContext):
     await state.finish()
     await message.reply("Вы прервали процесс!")

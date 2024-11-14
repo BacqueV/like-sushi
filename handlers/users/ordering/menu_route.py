@@ -84,18 +84,27 @@ async def open_meal(call: types.CallbackQuery, state: FSMContext):
     meal_menu_kb = await ordering.meal_menu_markup(1)
 
     await call.message.delete()
-    await call.message.answer_photo(
-        photo=meal[-1],
-        caption=f"{1} x {meal[4]} = <b>{price}</b> {info}\n\n"
-        f"<b>ID:</b> {meal[0]}\n"
-        f"<b>Имя:</b> {meal[2]}\n"
-        f"<b>Категория:</b> {category[1]}\n"
-        f"<b>Цена:</b> {meal[4]}\n"
-        f"<b>Описание:</b> {meal[3]}\n" + \
-        (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
-        (f"<b>Величина скидки:</b> {discount}%" if discount_state else ""),
-        reply_markup=meal_menu_kb
-    )
+
+    msg = f"{1} x {meal[4]} = <b>{price}</b> {info}\n\n" + \
+    f"<b>ID:</b> {meal[0]}\n" + \
+    f"<b>Имя:</b> {meal[2]}\n" + \
+    f"<b>Категория:</b> {category[1]}\n" + \
+    f"<b>Цена:</b> {meal[4]}\n" + \
+    f"<b>Описание:</b> {meal[3]}\n" + \
+    (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
+    (f"<b>Величина скидки:</b> {discount}%" if discount_state else "")
+
+    if meal[-1]:
+        await call.message.answer_photo(
+            photo=meal[-1],
+            caption=msg,
+            reply_markup=meal_menu_kb
+        )
+    else:
+        await call.message.answer(
+            msg,
+            reply_markup=meal_menu_kb
+        )
 
 
 @dp.callback_query_handler(state=OrderingState.meal_menu)
@@ -125,7 +134,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
             total_cost = (amount-1) * price
             await state.update_data(total_cost=total_cost)
 
-            msg = f"{amount-1} x {meal[4]} = <b>{total_cost}</b> {info}\n\n" + \
+            msg = f"{amount-1} x {meal[4]} = <b>{round(total_cost)}</b> {info}\n\n" + \
             f"<b>ID:</b> {meal[0]}\n" + \
             f"<b>Имя:</b> {meal[2]}\n" + \
             f"<b>Категория:</b> {category[1]}\n" + \
@@ -141,7 +150,8 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
                 )
             else:
                 await call.message.edit_text(
-                    msg, meal_menu_kb
+                    msg,
+                    reply_markup=meal_menu_kb
                 )
 
     elif call.data == 'increase':
@@ -152,7 +162,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
         total_cost = (amount+1) * price
         await state.update_data(total_cost=total_cost)
 
-        msg = f"{amount+1} x {meal[4]} = <b>{total_cost}</b> {info}\n\n" + \
+        msg = f"{amount+1} x {meal[4]} = <b>{round(total_cost)}</b> {info}\n\n" + \
         f"<b>ID:</b> {meal[0]}\n" + \
         f"<b>Имя:</b> {meal[2]}\n" + \
         f"<b>Категория:</b> {category[1]}\n" + \
@@ -168,7 +178,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
             )
         else:
             await call.message.edit_text(
-                msg, meal_menu_kb
+                msg, reply_markup=meal_menu_kb
             )
 
     elif call.data == 'basket':
@@ -176,7 +186,7 @@ async def meal_deal(call: types.CallbackQuery, state: FSMContext):
         total_cost = data.get('total_cost')
         await db.add_meal_into_basket(
             call.from_user.id, meal_id, real_price,
-            amount, price, total_cost, info, discount
+            amount, price, round(total_cost), info, discount
         )
         await call.answer("Добавлено!")
         await go_back.quit_meal_deal(call, state)
