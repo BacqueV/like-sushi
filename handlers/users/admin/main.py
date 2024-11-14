@@ -27,9 +27,9 @@ async def get_all_users(message: types.Message):
     }
     pd.options.display.max_rows = 10000
     df = pd.DataFrame(data)
-    if len(df) > 300:
-        for x in range(0, len(df), 300):
-            await bot.send_message(message.chat.id, df[x:x + 300])
+    if len(df) > 50:
+        for x in range(0, len(df), 50):
+            await bot.send_message(message.chat.id, df[x:x + 50])
     else:
         await bot.send_message(message.chat.id, df)
 
