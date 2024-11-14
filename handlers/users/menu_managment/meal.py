@@ -218,6 +218,7 @@ async def meal_add_confirmation(call: types.CallbackQuery, state: FSMContext):
         )
     else:
         await call.message.delete()
+        await state.finish()
         await call.message.answer(
             "<i>Вы отменили добавление блюда</i>\n\n",
         )
