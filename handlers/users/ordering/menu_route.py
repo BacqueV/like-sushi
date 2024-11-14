@@ -94,7 +94,7 @@ async def open_meal(call: types.CallbackQuery, state: FSMContext):
     (f"<b>Скидка:</b> {'Есть' if discount_state else 'Отсутствует'}\n") + \
     (f"<b>Величина скидки:</b> {discount}%" if discount_state else "")
 
-    result = True if meal[-1] else False
+    result = True if meal[-1] is not None else False
     if result:
         await call.message.answer_photo(
             photo=meal[-1],
