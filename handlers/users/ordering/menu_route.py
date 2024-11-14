@@ -5,6 +5,7 @@ from aiogram.dispatcher import FSMContext
 from keyboards.inline import ordering
 from states.ordering import OrderingState
 from . import go_back
+from aiogram.types import InputFile
 
 
 @dp.callback_query_handler(state=OrderingState.choose_category)
@@ -96,8 +97,9 @@ async def open_meal(call: types.CallbackQuery, state: FSMContext):
 
     result = True if meal[-1] is not None else False
     if result:
+        photo = InputFile(meal[-1]) if isinstance(meal[-1], str) else meal[-1]
         await call.message.answer_photo(
-            photo=meal[-1],
+            photo=photo,
             caption=msg,
             reply_markup=meal_menu_kb
         )
@@ -106,6 +108,7 @@ async def open_meal(call: types.CallbackQuery, state: FSMContext):
             msg,
             reply_markup=meal_menu_kb
         )
+
 
 
 @dp.callback_query_handler(state=OrderingState.meal_menu)
