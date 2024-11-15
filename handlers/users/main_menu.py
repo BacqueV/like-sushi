@@ -1,8 +1,11 @@
 from aiogram import types
 from loader import dp, db
 from keyboards.inline import ordering
-from states.user_orders import UserOrders
+from keyboards.default import main_menu
+from aiogram.dispatcher import FSMContext
+from states.orders import UserOrders
 from states.ordering import OrderingState
+from states.settings import SettingsState
 import asyncio
 
 
@@ -30,20 +33,21 @@ async def order(message: types.Message):
     )
 
 
-@dp.message_handler(text=['✍️ Оставить отзыв'])
-async def review(message: types.Message):
-    await message.answer('Скоро!')
-
-
-@dp.message_handler(text=['🎉 Акция'])
+@dp.message_handler(text=['🎉 Акции'])
 async def shares(message: types.Message):
     categories_onsale = await db.select_onsale_categories()
-    print(categories_onsale)
     meals_onsale = await db.select_all_onsale_meals()
 
-    response = "<b>Категории блюд, в которых действуют скидки</b>\n\n"
+    response = "<b>Скидки на целые категории блюд</b>\n\n"
     for category in categories_onsale:
-        print(category['name'])
+        response += f"{category['name']}\n"
+
+    response += '\n<b>Скидки на отдельные блюда</b>\n\n'
+    for meal in meals_onsale:
+        response += f"{meal['name']}\n"
+
+    await message.answer(response)
+
 
 @dp.message_handler(text=['🏘 Филиалы'])
 async def branches(message: types.Message):
@@ -54,9 +58,40 @@ async def branches(message: types.Message):
         await message.answer_location(branch[2], branch[3])
         await asyncio.sleep(.05)
 
+
 @dp.message_handler(text=['⚙️ Настройки'])
 async def settings(message: types.Message):
-    await message.answer('Скоро!')
+    await SettingsState.menu.set()
+    user = await db.select_user(telegram_id=message.from_user.id)
+    await message.answer(
+        "<b>Выберите настройку</b>\n\n"
+        f"Номер телефона: <code>{user[-1]}</code>",
+        reply_markup=main_menu.settings_kb
+    )
+
+
+@dp.message_handler(text=['⬅️ Назад'], state=SettingsState.menu)
+async def quit_settings(message: types.Message, state: FSMContext):
+    await state.finish()
+    await message.answer(
+        "<i>Вы покинули меню настроек</i>",
+        reply_markup=main_menu.kb
+    )
+
+
+@dp.message_handler(content_types=types.ContentType.CONTACT, state=SettingsState.menu)
+async def change_phone_number(message: types.Message, state: FSMContext):
+    phone_number = message.contact.phone_number
+    # Здесь сохраняем номер в базу данных или выполняем другие действия
+    await db.save_phone_number(
+        message.from_user.id,
+        phone_number,
+        message.from_user.full_name
+    )
+    await message.answer(
+        f"<b>Новый номер телефона сохранен!</b>\n{phone_number}",
+        reply_markup=main_menu.settings_kb    
+    )
 
 
 @dp.message_handler(text=['📋 Мои заказы'])
