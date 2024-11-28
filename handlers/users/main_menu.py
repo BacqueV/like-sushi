@@ -121,7 +121,8 @@ async def my_orders(message: types.Message):
 
 
 @dp.callback_query_handler(text='quit', state=UserOrders.list)
-async def quit_order_menu(call: types.CallbackQuery):
+async def quit_order_menu(call: types.CallbackQuery, state: FSMContext):
+    await state.reset_state()
     await call.message.edit_text(
         "<i>Вы завершили просмотр ваших заказов</i>",
         reply_markup=None

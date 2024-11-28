@@ -7,8 +7,10 @@ from loader import dp
 @dp.message_handler(CommandHelp(), state="*")
 async def bot_help(message: types.Message):
     text = ("Команды: ",
-            "/start - Запуск бота",
-            "/help - Помощь в работе бота",
-            "/adminhelp - Админские команды, работает только если ты админ :D")
+            "/start - Начало всех начал",
+            "/help - Показывает данное сообщение :D",
+            "/adminhelp - Админские команды. Работает только если ты админ :D",
+            "/reset - Нажимайте сюда что все починить",
+    )
     
     await message.answer("\n".join(text))
